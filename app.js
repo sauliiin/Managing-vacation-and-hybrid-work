@@ -46,7 +46,7 @@ const usersData = {
         displayLetter: 'Fe', 
         role: 'Secretário', 
         scheduleType: '2_3', 
-        schedule_2_days: ['mon', 'thu'], 
+        schedule_2_days: ['tue', 'thu'], 
         schedule_3_days: ['mon', 'tue', 'thu'], 
         color: '#4363d8' 
     },
@@ -59,16 +59,16 @@ const usersData = {
         schedule_3_days: ['mon', 'thu', 'fri'], 
         color: '#f58231' 
     },
-    'pr82925': { 
+    'pr106995': { 
         name: 'Gigi', 
         displayLetter: 'Gi', 
         role: 'Secretário', 
         scheduleType: '2_3', 
-        schedule_2_days: ['mon', 'fri'], 
+        schedule_2_days: ['tue', 'wed'], 
         schedule_3_days: ['tue', 'wed', 'thu'], 
         color: '#911eb4' 
     },
-    'pr82925': { 
+    'pr100369': { 
         name: 'Marcelle', 
         displayLetter: 'M', 
         role: 'Secretário', 
