@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Painel Central de Férias</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="main-container">
+        <header>
+            <h1>Painel de Controle</h1>
+            <div class="user-selector">
+                <label for="user-select">Selecionar Funcionário:</label>
+                <select id="user-select">
+                    <option value="">-- Escolha um funcionário --</option>
+                </select>
+            </div>
+        </header>
+
+        <main id="app-container" style="display: none;">
+            <h2 id="welcome-message"></h2>
+
+            <section class="card">
+                <h3>Minhas Férias</h3>
+                <p>Você pode marcar até 3 períodos, totalizando no máximo 25 dias úteis.</p>
+                <div id="vacation-periods"></div>
+                <button id="add-period-button">+ Adicionar Período</button>
+                <button id="confirm-vacation-button">Confirmar e Salvar Férias</button>
+                <p>Total de dias úteis marcados: <b id="total-business-days">0</b> de 25</p>
+                <p id="vacation-error" class="error-message"></p>
+                <p id="vacation-conflict" class="warning-message"></p>
+            </section>
+
+            <section class="card">
+                <h3>Mapa de Férias Geral</h3>
+                <div id="vacation-map"></div>
+            </section>
+
+            <section class="card">
+                <h3>Meu Calendário de Trabalho Híbrido</h3>
+                <div class="calendar-nav">
+                    <button id="prev-month-hybrid">‹ Mês Anterior</button>
+                    <h3 id="current-month-hybrid"></h3>
+                    <button id="next-month-hybrid">Próximo Mês ›</button>
+                </div>
+                <div id="hybrid-calendar" class="calendar-grid"></div>
+            </section>
+
+            <section class="card">
+                <h3>Quem Está Presencial na Semana</h3>
+                 <div class="calendar-nav">
+                    <button id="prev-week-presence">‹ Semana Anterior</button>
+                    <h3 id="current-week-presence"></h3>
+                    <button id="next-week-presence">Próxima Semana ›</button>
+                </div>
+                <table id="presence-table">
+                    <thead>
+                        <tr>
+                            <th>Funcionário</th>
+                            <th>Segunda</th>
+                            <th>Terça</th>
+                            <th>Quarta</th>
+                            <th>Quinta</th>
+                            <th>Sexta</th>
+                        </tr>
+                    </thead>
+                    <tbody id="presence-table-body"></tbody>
+                </table>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    
+    <script src="app.js"></script>
+</body>
+</html>
