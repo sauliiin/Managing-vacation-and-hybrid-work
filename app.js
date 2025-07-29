@@ -25,22 +25,27 @@ const holidays = [
   '2026-12-25'
 ];
 
+// ⭐ NOVO: Lista de avatares disponíveis
+const availableAvatars = [
+    'yoda.png', 'ben.png', 'trump.png', 'lula.png', 'vegeta.png',
+    'Chloe.png', 'pepa.png', 'magali.png'
+];
+
 // =================================================================
 // PASSO 2: DADOS DOS USUÁRIOS (COM SUAS ATUALIZAÇÕES)
 // =================================================================
-
+// ⭐ MODIFICADO: Adicionado campo 'avatar'
 const usersData = {
     'pr1182589': { 
         name: 'Mestre Yoda', 
         role: 'Gerente', schedule: ['mon', 'tue', 'wed', 'thu', 'fri'], 
-        scheduleType: 'fixed', color: '#3cb44b' },
+        scheduleType: 'fixed', color: '#3cb44b', avatar: 'img/yoda.png' },
     'pr115447': { 
         name: 'Bibi Perigosa', 
         displayLetter: 'Bi', role: 
         'Administrativo', schedule: ['thu', 'tue', 'wed'], 
         scheduleType: '2_3', 
-        color: '#ffe119' },
-
+        color: '#ffe119', avatar: 'img/pepa.png' },
     'pr101546': { 
         name: 'Fernanda',
         displayLetter: 'Fe', 
@@ -48,7 +53,7 @@ const usersData = {
         scheduleType: '2_3', 
         schedule_2_days: ['tue', 'thu'], 
         schedule_3_days: ['mon', 'tue', 'thu'], 
-        color: '#4363d8' 
+        color: '#4363d8', avatar: 'img/Chloe.png'
     },
     'pr82925': { 
         name: 'Gabi',
@@ -57,7 +62,7 @@ const usersData = {
         scheduleType: '2_3', 
         schedule_2_days: ['mon', 'fri'], 
         schedule_3_days: ['mon', 'thu', 'fri'], 
-        color: '#f58231' 
+        color: '#f58231', avatar: 'img/magali.png'
     },
     'pr106995': { 
         name: 'Gigi', 
@@ -66,7 +71,7 @@ const usersData = {
         scheduleType: '2_3', 
         schedule_2_days: ['tue', 'wed'], 
         schedule_3_days: ['tue', 'wed', 'thu'], 
-        color: '#911eb4' 
+        color: '#911eb4', avatar: 'img/ben.png' 
     },
     'pr100369': { 
         name: 'Marcelle', 
@@ -75,7 +80,7 @@ const usersData = {
         scheduleType: '2_3', 
         schedule_2_days: ['mon', 'wed', 'fri'],
         schedule_3_days: ['wed', 'fri'], 
-        color: '#42d4f4' 
+        color: '#42d4f4', avatar: 'img/lula.png'
     },
     'pr115627': { 
         name: 'Pedrin do coração', 
@@ -84,28 +89,28 @@ const usersData = {
         schedule_2_days: ['tue', 'thu'], 
         schedule_3_days: ['tue', 'wed', 'thu'], 
         scheduleType: '3_2', 
-        color: '#f032e6' },
+        color: '#f032e6', avatar: 'img/trump.png' },
     'pres324670': { 
         name: 'Samuquinha', 
         displayLetter: 'S', 
         role: 'Administrativo', 
         schedule: ['mon', 'wed', 'fri'], 
         scheduleType: 'fixed', 
-        color: '#bfef45' },
+        color: '#bfef45', avatar: 'img/vegeta.png' },
     'prps019624': { 
         name: 'Mestre Gabe, o melhor!', 
         displayLetter: 'MG', 
         role: 'Administrativo', 
         schedule: ['wed', 'fri', 'mon'], 
         scheduleType: '2_3', 
-        color: '#fabed4' },
+        color: '#fabed4', avatar: 'img/ben.png' },
     'pr100921': { 
         name: 'Shirlike', 
         displayLetter: 'Sh', 
         role: 'Secretário', 
-        schedule: ['wed', 'tue', 'mon'], // <-- A ORDEM FOI ALTERADA AQUI
+        schedule: ['wed', 'tue', 'mon'],
         scheduleType: '3_2', 
-        color: '#469990' 
+        color: '#469990', avatar: 'img/Chloe.png'
     },
     'pr1005047': { 
         name: 'Tatyellen', 
@@ -113,7 +118,7 @@ const usersData = {
         role: 'Secretário', 
         schedule: ['mon', 'tue', 'thu'], 
         scheduleType: '3_2', 
-        color: '#dcbeff' },
+        color: '#dcbeff', avatar: 'img/pepa.png' },
 };
 
 let currentUserLogin = null;
@@ -137,20 +142,107 @@ function initializeApp() {
     renderVacationMap();
     renderPresenceTable();
     setupNavEventListeners();
+    setupAvatarModalEvents(); // ⭐ NOVO
 }
 
 function onUserSelect() {
     currentUserLogin = document.getElementById('user-select').value;
     const appContainer = document.getElementById('app-container');
+    const profileContainer = document.getElementById('profile-picture-container');
+    
     if (currentUserLogin) {
         const userData = usersData[currentUserLogin];
         document.getElementById('welcome-message').textContent = `Gerenciando dados de: ${userData.name}`;
         appContainer.style.display = 'block';
+        profileContainer.style.display = 'block'; // ⭐ NOVO
+        loadUserProfile(currentUserLogin); // ⭐ NOVO
         loadUserVacations();
         renderHybridCalendar();
     } else {
         appContainer.style.display = 'none';
+        profileContainer.style.display = 'none'; // ⭐ NOVO
     }
+}
+
+
+// ⭐ NOVO: Carrega e exibe o perfil do usuário (avatar)
+async function loadUserProfile(login) {
+    const profileImg = document.getElementById('profile-img');
+    try {
+        const docRef = db.collection('funcionarios').doc(login);
+        const doc = await docRef.get();
+
+        let avatarUrl = usersData[login].avatar; // Padrão do usersData
+
+        if (doc.exists && doc.data().avatar) {
+            avatarUrl = doc.data().avatar; // Usa o avatar salvo no DB se existir
+        }
+        
+        profileImg.src = avatarUrl;
+    } catch (error) {
+        console.error("Erro ao carregar perfil do usuário:", error);
+        profileImg.src = usersData[login].avatar; // Fallback para o avatar padrão
+    }
+}
+
+// ⭐ NOVO: Salva o avatar escolhido no Firestore
+async function saveAvatar(login, avatarUrl) {
+    if (!login) return;
+    try {
+        await db.collection('funcionarios').doc(login).set({
+            avatar: avatarUrl
+        }, { merge: true }); // merge: true é crucial para não sobrescrever outros dados
+        console.log("Avatar salvo com sucesso!");
+    } catch (error) {
+        console.error("Erro ao salvar avatar:", error);
+        alert("Não foi possível salvar seu novo avatar. Tente novamente.");
+    }
+}
+
+// ⭐ NOVO: Funções para controlar o modal de avatares
+function setupAvatarModalEvents() {
+    const modal = document.getElementById('avatar-modal');
+    const profileImg = document.getElementById('profile-img');
+    const closeModalBtn = document.querySelector('.close-modal-button');
+
+    profileImg.addEventListener('click', () => {
+        if(currentUserLogin) openAvatarModal();
+    });
+
+    closeModalBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (event) => {
+        if (event.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+}
+
+function openAvatarModal() {
+    const modal = document.getElementById('avatar-modal');
+    const avatarGrid = document.getElementById('avatar-grid');
+    avatarGrid.innerHTML = ''; // Limpa o grid
+
+    availableAvatars.forEach(avatarFile => {
+        const img = document.createElement('img');
+        const fullPath = `img/${avatarFile}`;
+        img.src = fullPath;
+        img.classList.add('avatar-option');
+        img.alt = avatarFile;
+        img.title = `Selecionar ${avatarFile.split('.')[0]}`;
+        
+        img.addEventListener('click', async () => {
+            document.getElementById('profile-img').src = fullPath;
+            await saveAvatar(currentUserLogin, fullPath);
+            modal.style.display = 'none';
+        });
+
+        avatarGrid.appendChild(img);
+    });
+
+    modal.style.display = 'flex';
 }
 
 // =================================================================
@@ -428,7 +520,6 @@ function renderPresenceTable() {
 // PASSO 6: FUNÇÕES AUXILIARES E EVENTOS
 // =================================================================
 
-// ⭐ ATUALIZADO: Lógica para checar dia presencial agora inclui as regras especiais
 function isPresentialDay(login, date) {
     const user = usersData[login];
     if (!user || !isBusinessDay(date)) return false;
@@ -439,24 +530,20 @@ function isPresentialDay(login, date) {
         return user.schedule.includes(dayOfWeekStr);
     }
     
-    // Define a referência da semana ímpar/par
-    const referenceDate = new Date('2025-08-04T12:00:00Z'); // Semana de 04/08 é ímpar (tipo 1)
+    const referenceDate = new Date('2025-08-04T12:00:00Z'); 
     const referenceWeek = getWeekNumber(referenceDate);
     const currentWeek = getWeekNumber(date);
     const isFirstWeekType = (currentWeek % 2) === (referenceWeek % 2);
 
-    // Determina quantos dias trabalhar na semana
     const daysThisWeek = (user.scheduleType === '3_2' && isFirstWeekType) || (user.scheduleType === '2_3' && !isFirstWeekType) ? 3 : 2;
 
     let presentialDaysForThisWeek = [];
 
-    // Lógica para dias específicos (Fernanda e Gabi)
     if (daysThisWeek === 2 && user.schedule_2_days) {
         presentialDaysForThisWeek = user.schedule_2_days;
     } else if (daysThisWeek === 3 && user.schedule_3_days) {
         presentialDaysForThisWeek = user.schedule_3_days;
     } else {
-        // Lógica padrão para os demais
         presentialDaysForThisWeek = user.schedule.slice(0, daysThisWeek);
     }
     
