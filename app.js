@@ -81,8 +81,8 @@ const usersData = {
         name: 'Pedrin do coração', 
         displayLetter: 'P', 
         role: 'Administrativo', 
-        schedule_2_days: ['mon', 'fri'], 
-        schedule_3_days: ['mon', 'wed', 'fri'], 
+        schedule_2_days: ['tue', 'thu'], 
+        schedule_3_days: ['tue', 'wed', 'thu'], 
         scheduleType: '3_2', 
         color: '#f032e6' },
     'pres324670': { 
