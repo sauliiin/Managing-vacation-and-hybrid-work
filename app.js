@@ -27,8 +27,8 @@ const holidays = [
 
 // ⭐ NOVO: Lista de avatares disponíveis
 const availableAvatars = [
-    'yoda.png', 'ben.png', 'trump.png', 'lula.png', 'vegeta.png',
-    'Chloe.png', 'pepa.png', 'magali.png'
+    'yoda.png', 'ben.png', 'trump.png', 'lula.png', 'goku.jpg', `capivaraFeliz.jpg`,
+    'Chloe.png', 'pepa.png', 'magali.png', `capivaraMood.jpg`
 ];
 
 // =================================================================
@@ -71,7 +71,7 @@ const usersData = {
         scheduleType: '2_3', 
         schedule_2_days: ['tue', 'wed'], 
         schedule_3_days: ['tue', 'wed', 'thu'], 
-        color: '#911eb4', avatar: 'img/ben.png' 
+        color: '#911eb4', avatar: 'img/capivara.jpg' 
     },
     'pr100369': { 
         name: 'Marcelle', 
@@ -96,7 +96,7 @@ const usersData = {
         role: 'Administrativo', 
         schedule: ['mon', 'wed', 'fri'], 
         scheduleType: 'fixed', 
-        color: '#bfef45', avatar: 'img/vegeta.png' },
+        color: '#bfef45', avatar: 'img/goku.jpg' },
     'prps019624': { 
         name: 'Mestre Gabe, o melhor!', 
         displayLetter: 'MG', 
