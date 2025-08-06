@@ -300,3 +300,82 @@ button.btn-danger:hover {
 #presence-table thead th { background-color: #f2f2f2; }
 #presence-table .present { font-weight: bold; font-size: 20px; color: var(--primary-color); }
 #presence-table .non-business-day-cell { background-color: var(--light-pink) !important; }
+
+/* ======================================================================= */
+/* ESTILOS PARA VERSÃO MOBILE (CÓDIGO UNIFICADO E CORRIGIDO)          */
+/* ======================================================================= */
+
+@media (max-width: 768px) {
+
+    /* --- 1. AJUSTES GERAIS E BOTÕES --- */
+
+    .main-container {
+        margin: 0;
+        padding: 10px;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .calendar-nav {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    #save-substitutions-button {
+        width: 100%; 
+        padding: 15px;
+        font-size: 18px;
+        box-sizing: border-box; 
+    }
+
+    /* --- 2. AJUSTE PARA O CALENDÁRIO HÍBRIDO --- */
+
+    .calendar-grid {
+        gap: 2px;
+    }
+
+    .calendar-header, .calendar-day {
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    .user-presence-circle {
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
+    }
+
+    /* --- 3. AJUSTE PARA A TABELA "QUEM ESTÁ PRESENCIAL" --- */
+
+    #presence-table {
+        /* Define o fundo branco para a ilusão visual */
+        background-color: white;
+
+        /* Usa margem negativa para o fundo branco preencher o card */
+        margin-left: -15px;
+        margin-right: -15px;
+        
+        /* Adiciona padding para o conteúdo da tabela não colar nas bordas */
+        padding-left: 15px;
+        padding-right: 15px;
+
+        /* Aplica a mesma sombra do .card */
+        box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+
+        /* Garante que as bordas da tabela também sejam arredondadas */
+        border-radius: 8px;
+
+        /* Ativa o comportamento de bloco e a rolagem horizontal */
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    #presence-table th, 
+    #presence-table td {
+        /* Impede que o texto das células quebre em várias linhas */
+        white-space: nowrap;
+    }
+}
