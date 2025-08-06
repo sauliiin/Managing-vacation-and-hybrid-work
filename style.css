@@ -300,3 +300,85 @@ button.btn-danger:hover {
 #presence-table thead th { background-color: #f2f2f2; }
 #presence-table .present { font-weight: bold; font-size: 20px; color: var(--primary-color); }
 #presence-table .non-business-day-cell { background-color: var(--light-pink) !important; }
+
+
+/* ================================================= */
+/* ESTILOS PARA VERSÃO MOBILE             */
+/* ================================================= */
+
+/* Ativa estes estilos apenas em telas com largura máxima de 768px (tablets e celulares) */
+@media (max-width: 768px) {
+
+    /* --- 1. AJUSTES GERAIS E BOTÕES --- */
+
+    .main-container {
+        /* Remove as margens laterais para aproveitar toda a tela */
+        margin: 0;
+        padding: 10px;
+    }
+
+    .card {
+        padding: 15px;
+    }
+
+    .calendar-nav {
+        /* Coloca os botões de navegação em coluna para economizar espaço horizontal */
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    /* O botão "Salvar Resultados", que é criado dinamicamente */
+    #save-substitutions-button {
+        /* Ocupa toda a largura para ser fácil de tocar */
+        width: 100%; 
+        padding: 15px;
+        font-size: 18px;
+        /* Garante que o padding não quebre o layout de 100% de largura */
+        box-sizing: border-box; 
+    }
+
+
+    /* --- 2. CORREÇÃO PARA O "CALENDÁRIO DE TRABALHO HÍBRIDO" --- */
+
+    .calendar-grid {
+        /* Diminui o espaço entre os dias para caber melhor na tela */
+        gap: 2px;
+    }
+
+    .calendar-header, .calendar-day {
+        /* Reduz o padding e o tamanho da fonte dentro de cada dia */
+        padding: 5px;
+        font-size: 12px;
+    }
+
+    /* Diminui o tamanho do círculo de presença para não estourar a célula do dia */
+    .user-presence-circle {
+        width: 24px;
+        height: 24px;
+        font-size: 14px;
+    }
+
+
+/* ======================================================================= */
+/* ESTILOS PARA VERSÃO MOBILE (ATUALIZADO PARA A TABELA DE PRESENÇA) */
+/* ======================================================================= */
+
+@media (max-width: 768px) {
+
+    /* --- CORREÇÃO PARA A TABELA "QUEM ESTÁ PRESENCIAL NA SEMANA" (VERSÃO APRIMORADA) --- */
+
+    #presence-table {
+        /* A MÁGICA ACONTECE AQUI */
+        display: block;          /* 1. Transforma a tabela, que é rígida, em um elemento de bloco. */
+        width: 100%;             /* 2. Faz o bloco da tabela ocupar o espaço disponível na tela. */
+        overflow-x: auto;        /* 3. Adiciona a rolagem horizontal NA PRÓPRIA TABELA se o conteúdo interno for maior que a tela. */
+        -webkit-overflow-scrolling: touch; /* 4. (Bônus) Deixa a rolagem mais suave em iPhones/iPads. */
+    }
+
+    #presence-table th, 
+    #presence-table td {
+        /* 5. Impede que o texto ("Segunda", "Terça", etc.) quebre em duas linhas, deixando a tabela limpa. */
+        white-space: nowrap;
+        padding: 10px 12px; /* Aumenta um pouco o padding para facilitar a leitura */
+    }
+}
