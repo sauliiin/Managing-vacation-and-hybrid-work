@@ -37,7 +37,10 @@
 
             <section class="card">
                 <h3>Mapa de Férias Geral</h3>
-                <div id="vacation-map"></div>
+                <div id="vacation-map-container">
+                    <div id="vacation-map-list"></div>
+                    <div id="vacation-alert-container"></div>
+                </div>
             </section>
 
             <section class="card">
@@ -78,8 +81,17 @@
         <div class="modal-content">
             <span class="close-modal-button">&times;</span>
             <h3>Escolha seu Avatar</h3>
-            <div id="avatar-grid" class="avatar-grid">
-                </div>
+            <div id="avatar-grid" class="avatar-grid"></div>
+        </div>
+    </div>
+
+    <div id="password-modal" class="modal" style="display:none;">
+        <div class="modal-content">
+            <span id="close-password-modal" class="close-modal-button">&times;</span>
+            <h3>Acesso Restrito ao Conselho Jedi</h3>
+            <p>Por favor, insira a senha para continuar.</p>
+            <input type="password" id="jedi-password-input" placeholder="Senha Jedi">
+            <button id="jedi-password-confirm">Confirmar</button>
         </div>
     </div>
 

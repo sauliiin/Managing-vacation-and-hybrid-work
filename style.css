@@ -28,7 +28,6 @@ header {
 
 .user-selector {
     margin-top: 15px;
-    /* ⭐ MODIFICADO: Alinha o seletor e a foto de perfil */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -47,7 +46,6 @@ header {
     border-radius: 4px;
 }
 
-/* ⭐ NOVO: Estilos para a foto de perfil */
 #profile-picture-container {
     margin-left: 15px;
 }
@@ -66,7 +64,6 @@ header {
     transform: scale(1.1);
 }
 
-/* ⭐ NOVO: Estilos para o Modal de Avatar */
 .modal {
     display: none; 
     position: fixed; 
@@ -148,6 +145,11 @@ button:hover {
     background-color: #0056b3;
 }
 
+button:disabled {
+    background-color: #aaa;
+    cursor: not-allowed;
+}
+
 main {
     padding: 10px;
 }
@@ -163,69 +165,138 @@ main {
 .error-message { color: #d9534f; font-weight: bold; }
 .warning-message { color: #f0ad4e; font-weight: bold; }
 
-.calendar-nav {
+#vacation-map-container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
-.calendar-grid {
-    display: grid;
-    grid-template-columns: repeat(7, 1fr);
-    gap: 5px;
-    text-align: center;
+#vacation-map-list {
+    flex: 1;
+    min-width: 300px;
 }
 
-.calendar-header, .calendar-day {
-    padding: 10px;
-    border-radius: 4px;
+#vacation-alert-container {
+    flex: 1;
+    min-width: 300px;
+    padding: 15px;
+    border-left: 2px solid var(--border-color);
 }
 
-.calendar-header {
-    background-color: #f0f0f0;
-    font-weight: bold;
+#vacation-alert-container h4 {
+    margin-top: 0;
 }
 
-.calendar-day.non-business-day {
-    background-color: var(--light-pink);
-    color: #aaa;
+#global-roulette-results {
+    margin-top: 15px;
+    padding-top: 10px;
+    border-top: 1px solid #eee;
 }
 
-.user-presence-circle {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    color: white;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: auto;
-    font-weight: bold;
-    font-size: 18px;
-}
-
-#presence-table {
+/* ESTILOS PARA ROLETA MALUCA */
+.roulette-modal {
+    display: none;
+    position: fixed;
+    z-index: 2000;
+    left: 0;
+    top: 0;
     width: 100%;
-    border-collapse: collapse;
-    text-align: center;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    justify-content: center;
+    align-items: center;
 }
 
-#presence-table th, #presence-table td {
-    border: 1px solid var(--border-color);
-    padding: 12px;
+/* REGRA CORRIGIDA/ADICIONADA PARA EXIBIR A ROLETA */
+.roulette-modal.visible {
+    display: flex;
 }
 
-#presence-table thead th {
-    background-color: #f2f2f2;
+.roulette-container {
+    position: relative;
+    width: 400px;
+    height: 400px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
-#presence-table .present {
+.roulette-pointer {
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 30px solid #ff4757; /* Cor da seta */
+    z-index: 2002;
+    filter: drop-shadow(0 -2px 2px rgba(0,0,0,0.3));
+}
+
+.roulette-wheel {
+    width: 380px;
+    height: 380px;
+    border-radius: 50%;
+    border: 5px solid #34495e;
+    position: relative;
+    overflow: hidden;
+    background-color: #ecf0f1;
+    box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    transition: transform 5s ease-out;
+}
+
+.roulette-label {
+    position: absolute;
+    transform-origin: 0 0;
+    color: white;
     font-weight: bold;
-    font-size: 20px;
-    color: var(--primary-color);
+    text-shadow: 1px 1px 1px rgba(0,0,0,0.5);
+    pointer-events: none;
 }
 
-#presence-table .non-business-day-cell {
-    background-color: var(--light-pink) !important;
+#spin-button {
+    position: absolute;
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background-color: #f1c40f;
+    border: 5px solid #f39c12;
+    z-index: 2001;
+    font-size: 18px;
+    font-weight: bold;
+    color: #fff;
+    cursor: pointer;
+    box-shadow: 0 5px 0 #d68910;
+    transition: transform 0.1s, box-shadow 0.1s;
 }
+#spin-button:active {
+    transform: translateY(2px);
+    box-shadow: 0 3px 0 #d68910;
+}
+#spin-button:disabled {
+    background-color: #95a5a6;
+    box-shadow: 0 5px 0 #7f8c8d;
+    cursor: not-allowed;
+}
+
+button.btn-danger {
+    background-color: #d9534f; /* Vermelho */
+}
+button.btn-danger:hover {
+    background-color: #c9302c; /* Vermelho mais escuro */
+}
+
+/* Demais estilos */
+.calendar-nav { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; text-align: center; }
+.calendar-header, .calendar-day { padding: 10px; border-radius: 4px; }
+.calendar-header { background-color: #f0f0f0; font-weight: bold; }
+.calendar-day.non-business-day { background-color: var(--light-pink); color: #aaa; }
+.user-presence-circle { width: 30px; height: 30px; border-radius: 50%; color: white; display: flex; align-items: center; justify-content: center; margin: auto; font-weight: bold; font-size: 18px; }
+#presence-table { width: 100%; border-collapse: collapse; text-align: center; }
+#presence-table th, #presence-table td { border: 1px solid var(--border-color); padding: 12px; }
+#presence-table thead th { background-color: #f2f2f2; }
+#presence-table .present { font-weight: bold; font-size: 20px; color: var(--primary-color); }
+#presence-table .non-business-day-cell { background-color: var(--light-pink) !important; }
