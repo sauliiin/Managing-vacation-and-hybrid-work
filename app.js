@@ -36,17 +36,115 @@ const YODA_LOGIN = 'pr1182589';
 // PASSO 2: DADOS DOS USUÁRIOS
 // =================================================================
 const usersData = {
-    'pr1182589': { name: 'Mestre Yoda', role: 'Gerente', schedule: ['mon', 'tue', 'wed', 'thu', 'fri'], scheduleType: 'fixed', color: '#3cb44b', avatar: 'img/yoda.png' },
-    'pr115447': { name: 'Bibi Perigosa', displayLetter: 'Bi', role: 'Administrativo', schedule: ['thu', 'tue', 'wed'], scheduleType: '2_3', color: '#ffe119', avatar: 'img/pepa.png' },
-    'pr101546': { name: 'Fernanda', displayLetter: 'Fe', role: 'Secretário', scheduleType: '2_3', schedule_2_days: ['tue', 'thu'], schedule_3_days: ['mon', 'tue', 'thu'], color: '#4363d8', avatar: 'img/Chloe.png', meetingDay: 'tue' },
-    'pr82925': { name: 'Gabi', displayLetter: 'Ga', role: 'Secretário', scheduleType: '2_3', schedule_2_days: ['mon', 'fri'], schedule_3_days: ['mon', 'thu', 'fri'], color: '#f58231', avatar: 'img/magali.png', meetingDay: 'wed' },
-    'pr106995': { name: 'Gigi', displayLetter: 'Gi', role: 'Secretário', scheduleType: '2_3', schedule_2_days: ['tue', 'wed'], schedule_3_days: ['tue', 'wed', 'thu'], color: '#911eb4', avatar: 'img/capivara.jpg', meetingDay: 'thu' },
-    'pr100369': { name: 'Marcelle', displayLetter: 'M', role: 'Secretário', scheduleType: '2_3', schedule_2_days: ['mon', 'wed', 'fri'], schedule_3_days: ['wed', 'fri'], color: '#42d4f4', avatar: 'img/lula.png', meetingDay: 'fri' },
-    'pr115627': { name: 'Pedrin do coração', displayLetter: 'P', role: 'Administrativo', schedule_2_days: ['tue', 'thu'], schedule_3_days: ['tue', 'wed', 'thu'], scheduleType: '3_2', color: '#f032e6', avatar: 'img/trump.png' },
-    'pres324670': { name: 'Samuquinha', displayLetter: 'S', role: 'Administrativo', schedule: ['mon', 'wed', 'fri'], scheduleType: 'fixed', color: '#bfef45', avatar: 'img/goku.jpg' },
-    'prps019624': { name: 'Mestre Gabe, o melhor!', displayLetter: 'MG', role: 'Administrativo', schedule: ['wed', 'fri', 'mon'], scheduleType: '2_3', color: '#fabed4', avatar: 'img/ben.png' },
-    'pr100921': { name: 'Shirlike', displayLetter: 'Sh', role: 'Secretário', schedule: ['mon'], scheduleType: 'fixed', color: '#469990', avatar: 'img/Chloe.png', meetingDay: 'mon' },
-    'pr1005047': { name: 'Tatyellen', displayLetter: 'T', role: 'Secretário', schedule: ['wed'], scheduleType: 'fixed', color: '#dcbeff', avatar: 'img/pepa.png', meetingDay: 'wed' },
+    'pr1182589': {
+        name: 'Mestre Yoda',
+        role: 'Gerente',
+        schedule: ['mon', 'tue', 'wed', 'thu', 'fri'],
+        scheduleType: 'fixed',
+        color: '#3cb44b',
+        avatar: 'img/yoda.png'
+    },
+    'pr115447': {
+        name: 'Bibi Perigosa',
+        displayLetter: 'Bi',
+        role: 'Administrativo',
+        schedule: ['thu', 'tue', 'wed'],
+        scheduleType: '2_3',
+        color: '#ffe119',
+        avatar: 'img/pepa.png'
+    },
+    'pr101546': {
+        name: 'Fernanda',
+        displayLetter: 'Fe',
+        role: 'Secretário',
+        scheduleType: '2_3',
+        schedule_2_days: ['tue', 'thu'],
+        schedule_3_days: ['mon', 'tue', 'thu'],
+        color: '#4363d8',
+        avatar: 'img/Chloe.png',
+        meetingDay: 'tue'
+    },
+    'pr82925': {
+        name: 'Gabi',
+        displayLetter: 'Ga',
+        role: 'Secretário',
+        scheduleType: '2_3',
+        schedule_2_days: ['mon', 'fri'],
+        schedule_3_days: ['mon', 'thu', 'fri'],
+        color: '#f58231',
+        avatar: 'img/magali.png',
+        meetingDay: 'wed'
+    },
+    'pr106995': {
+        name: 'Gigi',
+        displayLetter: 'Gi',
+        role: 'Secretário',
+        scheduleType: '2_3',
+        schedule_2_days: ['tue', 'wed'],
+        schedule_3_days: ['tue', 'wed', 'thu'],
+        color: '#911eb4',
+        avatar: 'img/capivara.jpg',
+        meetingDay: 'thu'
+    },
+    'pr100369': {
+        name: 'Marcelle',
+        displayLetter: 'M',
+        role: 'Secretário',
+        scheduleType: '2_3',
+        schedule_2_days: ['mon', 'wed', 'fri'],
+        schedule_3_days: ['wed', 'fri'],
+        color: '#42d4f4',
+        avatar: 'img/lula.png',
+        meetingDay: 'fri'
+    },
+    'pr115627': {
+        name: 'Pedrin do coração',
+        displayLetter: 'P',
+        role: 'Administrativo',
+        schedule_2_days: ['tue', 'thu'],
+        schedule_3_days: ['tue', 'wed', 'thu'],
+        scheduleType: '3_2',
+        color: '#f032e6',
+        avatar: 'img/trump.png'
+    },
+    'pres324670': {
+        name: 'Samuquinha',
+        displayLetter: 'S',
+        role: 'Administrativo',
+        schedule: ['mon', 'wed', 'fri'],
+        scheduleType: 'fixed',
+        color: '#bfef45',
+        avatar: 'img/goku.jpg'
+    },
+    'prps019624': {
+        name: 'Mestre Gabe, o melhor!',
+        displayLetter: 'MG',
+        role: 'Administrativo',
+        schedule: ['wed', 'fri', 'mon'],
+        scheduleType: '2_3',
+        color: '#fabed4',
+        avatar: 'img/ben.png'
+    },
+    'pr100921': {
+        name: 'Shirlike',
+        displayLetter: 'Sh',
+        role: 'Secretário',
+        schedule: ['wed', 'tue', 'mon'],
+        scheduleType: 'fixed',
+        color: '#469990',
+        avatar: 'img/Chloe.png',
+        meetingDay: 'mon'
+    },
+    'pr1005047': {
+        name: 'Tatyellen',
+        displayLetter: 'T',
+        role: 'Secretário',
+        schedule: ['mon', 'tue', 'thu'], 
+        scheduleType: 'fixed',
+        color: '#dcbeff',
+        avatar: 'img/pepa.png',
+        meetingDay: 'wed'
+    }
 };
 
 let currentUserLogin = null;
