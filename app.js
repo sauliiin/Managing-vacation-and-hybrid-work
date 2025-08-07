@@ -458,6 +458,7 @@ async function renderVacationMap() {
     await loadAndApplySavedSubstitutions();
 }
 
+
 async function loadAndApplySavedSubstitutions() {
     if (substitutionsNeeded.length > 0) {
         const docIdsToFetch = substitutionsNeeded.map(sub => `${sub.employeeId}_${sub.date.toISOString().slice(0, 10)}`);
@@ -471,7 +472,12 @@ async function loadAndApplySavedSubstitutions() {
                     s.employeeId === data.employeeOnVacationId && s.date.toISOString().slice(0, 10) === data.date
                 );
                 if (subNeeded) {
+                    // Guarda o estado atual da seleção (que veio do banco)
                     subNeeded.substituteId = data.substituteId;
+                    
+                    // ⭐ NOVO: Guarda o estado ORIGINAL em uma propriedade separada.
+                    // Isso é crucial para detectar se um usuário está tentando ALTERAR um dado já salvo.
+                    subNeeded.savedSubstituteId = data.substituteId; 
                 }
             }
         });
@@ -479,49 +485,68 @@ async function loadAndApplySavedSubstitutions() {
     renderAlertsAndResultsUI();
 }
 
+/**
+ * Renderiza os alertas de substituição e os resultados da roleta.
+ * ATUALIZADO: Agora exibe todas as substituições necessárias,
+ * diferenciando visualmente as que já foram resolvidas (com substituto salvo)
+ * das que ainda estão pendentes.
+ */
 function renderAlertsAndResultsUI() {
     const alertContainerDiv = document.getElementById('vacation-alert-container');
-    alertContainerDiv.innerHTML = '';
+    alertContainerDiv.innerHTML = ''; // Limpa o conteúdo anterior
 
-    const pendingSubstitutions = substitutionsNeeded.filter(sub => !sub.substituteId);
-
+    // Verifica se há alguma necessidade de substituição
     if (substitutionsNeeded.length > 0) {
         const alertTitle = document.createElement('h4');
-        alertTitle.style.color = 'red';
+        alertTitle.style.color = '#dc3545'; // Vermelho para chamar atenção
         alertTitle.textContent = 'ALERTA! Necessário substituição nas datas:';
         alertContainerDiv.appendChild(alertTitle);
 
-        if (pendingSubstitutions.length > 0) {
-            pendingSubstitutions.forEach(sub => {
-                const p = document.createElement('p');
-                p.textContent = `${formatDate(sub.date)} (${sub.employeeName})`;
-                alertContainerDiv.appendChild(p);
-            });
-        } else {
+        // Ordena as substituições por data para uma exibição lógica
+        substitutionsNeeded.sort((a, b) => a.date - b.date);
+
+        // Itera por TODAS as substituições necessárias, não apenas as pendentes
+        substitutionsNeeded.forEach(sub => {
             const p = document.createElement('p');
-            p.textContent = "Nenhuma substituição pendente.";
+            p.style.fontWeight = '500'; // Deixa o texto um pouco mais forte
+
+            // ⭐ LÓGICA PRINCIPAL DA MUDANÇA ⭐
+            // Verifica se um substituto JÁ FOI atribuído e salvo para esta data
+            if (sub.substituteId) {
+                // Se sim, busca o nome do substituto
+                const substituteName = usersData[sub.substituteId]?.name || 'Substituto Desconhecido';
+                
+                // Formata a string conforme solicitado, com o nome do substituto e o emoji
+                p.innerHTML = `${formatDate(sub.date)} (${sub.employeeName}) - <strong>${substituteName}</strong> ✅`;
+                p.style.color = '#198754'; // Verde para indicar sucesso/resolvido
+            } else {
+                // Se não houver substituto, exibe como pendente
+                p.textContent = `${formatDate(sub.date)} (${sub.employeeName})`;
+                p.style.color = '#dc3545'; // Vermelho para indicar pendência
+            }
             alertContainerDiv.appendChild(p);
-        }
+        });
+
     } else {
+        // Mensagem padrão se não houver nenhuma substituição necessária
         const p = document.createElement('p');
         p.textContent = "Nenhuma substituição necessária no momento.";
         alertContainerDiv.appendChild(p);
     }
 
+    // Adiciona o botão da Roleta Maluca
     const rouletteButton = document.createElement('button');
     rouletteButton.id = 'global-roulette-button';
     rouletteButton.textContent = 'Roleta Maluca';
     rouletteButton.onclick = runGlobalCrazyRoulette;
     alertContainerDiv.appendChild(rouletteButton);
 
+    // Adiciona o container para os resultados da roleta
     const resultsDiv = document.createElement('div');
     resultsDiv.id = 'global-roulette-results';
     alertContainerDiv.appendChild(resultsDiv);
 
-    if (substitutionsNeeded.length > 0) {
-        renderSubstitutionResults();
-    }
-    
+    // Mostra o botão de limpar dados para o Mestre Yoda
     if (currentUserLogin === YODA_LOGIN) {
         const clearButton = document.createElement('button');
         clearButton.id = 'clear-roulette-button';
@@ -530,6 +555,11 @@ function renderAlertsAndResultsUI() {
         clearButton.style.marginTop = '20px';
         clearButton.onclick = clearRouletteData;
         alertContainerDiv.appendChild(clearButton);
+    }
+    
+    // Renderiza os resultados da última rodada da roleta, se houver
+    if (substitutionsNeeded.length > 0) {
+        renderSubstitutionResults();
     }
 }
 
@@ -787,37 +817,73 @@ function renderSubstitutionResults() {
 /**
  * Salva as substituições (calculadas ou alteradas manualmente) no Firestore.
  */
+/**
+ * Salva as substituições no Firestore, com regras de permissão.
+ * - Usuários comuns só podem salvar substituições para datas PENDENTES.
+ * - Apenas o Mestre Yoda pode ALTERAR uma substituição já existente.
+ */
 async function saveSubstitutionsToDB() {
     const saveButton = document.getElementById('save-substitutions-button');
     if (saveButton) saveButton.disabled = true;
 
     const batch = db.batch();
-    let changesMade = 0;
+    let changesToCommit = 0;
+    const conflictMessages = [];
+
     substitutionsNeeded.forEach(sub => {
-        if (sub.substituteId && sub.substituteId !== "") {
-            changesMade++;
-            const subDateStr = sub.date.toISOString().slice(0, 10);
-            const subRef = db.collection('substituicoes').doc(`${sub.employeeId}_${subDateStr}`);
-            batch.set(subRef, {
-                date: subDateStr,
-                employeeOnVacationId: sub.employeeId,
-                employeeOnVacationName: sub.employeeName,
-                substituteId: sub.substituteId,
-                substituteName: usersData[sub.substituteId].name,
-                savedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
+        // Ignora se não houver substituto selecionado
+        if (!sub.substituteId || sub.substituteId === "") return;
+
+        // ==================================================
+        // ⭐ LÓGICA DE CONFLITO E PERMISSÃO ⭐
+        // ==================================================
+        const isChangingSavedData = sub.savedSubstituteId && sub.substituteId !== sub.savedSubstituteId;
+        const isNotJedi = currentUserLogin !== YODA_LOGIN;
+
+        // CONFLITO: Ocorre se um usuário que NÃO é o Yoda tenta alterar um dado já salvo.
+        if (isChangingSavedData && isNotJedi) {
+            const originalSubstituteName = usersData[sub.savedSubstituteId]?.name || 'Desconhecido';
+            const conflictMessage = `Por favor, solicite a um Mestre Jedi a alteração: ${formatDate(sub.date)} (${sub.employeeName}) - ${originalSubstituteName} ✅`;
+            conflictMessages.push(conflictMessage);
+            
+            // Pula a adição desta alteração ao batch
+            return; 
         }
+
+        // Se não houver conflito, prepara para salvar.
+        // Isso inclui: 1. Inserir um novo substituto; 2. Mestre Yoda alterando um existente.
+        changesToCommit++;
+        const subDateStr = sub.date.toISOString().slice(0, 10);
+        const subRef = db.collection('substituicoes').doc(`${sub.employeeId}_${subDateStr}`);
+        batch.set(subRef, {
+            date: subDateStr,
+            employeeOnVacationId: sub.employeeId,
+            employeeOnVacationName: sub.employeeName,
+            substituteId: sub.substituteId,
+            substituteName: usersData[sub.substituteId].name,
+            savedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true }); // Usar merge para segurança
     });
 
-    if (changesMade === 0) {
-        alert("Nenhuma substituição foi definida para ser salva.");
+    // Se houver conflitos, exibe um alerta consolidado para o usuário.
+    if (conflictMessages.length > 0) {
+        alert(conflictMessages.join('\n'));
+    }
+
+    // Se não houver alterações válidas para salvar, apenas para.
+    if (changesToCommit === 0) {
+        alert("Nenhuma nova substituição válida para salvar.");
         if (saveButton) saveButton.disabled = false;
+        // Recarrega o mapa para reverter visualmente as alterações bloqueadas nos dropdowns
+        await renderVacationMap(); 
         return;
     }
 
+    // Se houver alterações válidas, executa o salvamento no banco.
     try {
         await batch.commit();
-        alert(`${changesMade} substituição(ões) salva(s) com sucesso!`);
+        alert(`${changesToCommit} substituição(ões) salva(s) com sucesso!`);
+        // Recarrega o mapa de férias para refletir os dados atualizados do banco
         await renderVacationMap();
     } catch (error) {
         console.error("Erro ao salvar substituições: ", error);
@@ -957,45 +1023,107 @@ function renderSubstitutionResults() {
 }
 
 /**
- * Salva as substituições (calculadas ou alteradas manualmente) no Firestore.
+ * Salva as substituições no Firestore, com regras de permissão.
+ * - Usuários comuns só podem salvar substituições para datas PENDENTES.
+ * - Apenas o Mestre Yoda pode ALTERAR uma substituição já existente.
+ * * CORRIGIDO: Usa um loop for...of para um controle de fluxo explícito e correto.
  */
 async function saveSubstitutionsToDB() {
     const saveButton = document.getElementById('save-substitutions-button');
-    if (saveButton) saveButton.disabled = true;
+    if (saveButton) {
+        saveButton.disabled = true;
+        saveButton.textContent = 'Salvando...';
+    }
 
     const batch = db.batch();
-    let changesMade = 0;
-    substitutionsNeeded.forEach(sub => {
-        if (sub.substituteId && sub.substituteId !== "") {
-            changesMade++;
-            const subDateStr = sub.date.toISOString().slice(0, 10);
-            const subRef = db.collection('substituicoes').doc(`${sub.employeeId}_${subDateStr}`);
-            batch.set(subRef, {
-                date: subDateStr,
-                employeeOnVacationId: sub.employeeId,
-                employeeOnVacationName: sub.employeeName,
-                substituteId: sub.substituteId,
-                substituteName: usersData[sub.substituteId].name,
-                savedAt: firebase.firestore.FieldValue.serverTimestamp()
-            });
-        }
-    });
+    let changesToCommit = 0;
+    const conflictMessages = [];
 
-    if (changesMade === 0) {
-        alert("Nenhuma substituição foi definida para ser salva.");
-        if (saveButton) saveButton.disabled = false;
+    // Usando 'for...of' para ter controle explícito com 'continue'
+    for (const sub of substitutionsNeeded) {
+        const subDateStr = sub.date.toISOString().slice(0, 10);
+        
+        // Log para depuração: mostra o estado do item antes de decidir
+        console.log(`Verificando: ${subDateStr} (${sub.employeeName})`, {
+            selected: sub.substituteId,
+            saved: sub.savedSubstituteId,
+            user: currentUserLogin
+        });
+
+        // Ignora se não houver substituto selecionado na UI
+        if (!sub.substituteId || sub.substituteId === "") {
+            continue; // Pula para a próxima iteração
+        }
+        
+        // ==================================================
+        // ⭐ LÓGICA DE CONFLITO E PERMISSÃO (REVISADA) ⭐
+        // ==================================================
+        const isChangingSavedData = sub.savedSubstituteId && sub.substituteId !== sub.savedSubstituteId;
+        const isNotJedi = currentUserLogin !== YODA_LOGIN;
+
+        // CONFLITO: Ocorre se um usuário que NÃO é o Yoda tenta alterar um dado já salvo.
+        if (isChangingSavedData && isNotJedi) {
+            const originalSubstituteName = usersData[sub.savedSubstituteId]?.name || 'Desconhecido';
+            const conflictMessage = `Por favor, solicite a um Mestre Jedi a alteração: ${formatDate(sub.date)} (${sub.employeeName}) - ${originalSubstituteName} ✅`;
+            conflictMessages.push(conflictMessage);
+
+            console.warn('CONFLITO DETECTADO!', { sub, conflictMessage });
+            
+            // Pula a adição desta alteração ao batch, passando para o próximo item
+            continue; 
+        }
+
+        // Se não houver conflito, prepara para salvar.
+        // Isso inclui: 1. Inserir um novo substituto; 2. Mestre Yoda alterando um existente.
+        changesToCommit++;
+        const subRef = db.collection('substituicoes').doc(`${sub.employeeId}_${subDateStr}`);
+        batch.set(subRef, {
+            date: subDateStr,
+            employeeOnVacationId: sub.employeeId,
+            employeeOnVacationName: sub.employeeName,
+            substituteId: sub.substituteId,
+            substituteName: usersData[sub.substituteId].name,
+            savedAt: firebase.firestore.FieldValue.serverTimestamp()
+        }, { merge: true });
+        
+        console.log('OK para salvar:', { sub });
+    }
+
+    // --- Lógica Pós-Loop ---
+
+    // 1. Se houver conflitos, exibe um alerta consolidado para o usuário.
+    if (conflictMessages.length > 0) {
+        alert('Atenção:\n\n' + conflictMessages.join('\n'));
+    }
+
+    // 2. Se não houver alterações válidas para salvar, apenas para e reativa o botão.
+    if (changesToCommit === 0) {
+        if (conflictMessages.length === 0) { // Só mostra este alerta se não houver conflitos
+            alert("Nenhuma nova substituição válida para salvar.");
+        }
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = 'Salvar Resultados no Banco de Dados';
+        }
+        // Recarrega o mapa para reverter visualmente as alterações bloqueadas
+        await renderVacationMap(); 
         return;
     }
 
+    // 3. Se houver alterações válidas, executa o salvamento no banco.
     try {
         await batch.commit();
-        alert(`${changesMade} substituição(ões) salva(s) com sucesso!`);
-        // Recarrega o mapa de férias para refletir os alertas atualizados
-        await renderVacationMap();
+        alert(`${changesToCommit} substituição(ões) salva(s) com sucesso!`);
     } catch (error) {
         console.error("Erro ao salvar substituições: ", error);
         alert("Ocorreu um erro ao salvar os dados. Verifique o console.");
-        if (saveButton) saveButton.disabled = false;
+    } finally {
+        // Garante que o mapa seja recarregado e o botão reativado em qualquer cenário
+        await renderVacationMap();
+        if (saveButton) {
+            saveButton.disabled = false;
+            saveButton.textContent = 'Salvar Resultados no Banco de Dados';
+        }
     }
 }
 
