@@ -27,7 +27,7 @@ const holidays = [
 
 const availableAvatars = [
     'yoda.png', 'ben.png', 'trump.png', 'lula.png', 'goku.jpg', `capivaraFeliz.jpg`,
-    'Chloe.png', 'pepa.png', 'magali.png', `capivaraMood.jpg`
+    'Chloe.png', 'pepa.png', 'magali.png', 'sofor.png', `capivaraMood.jpg`
 ];
 
 const YODA_LOGIN = 'pr1182589';
@@ -36,23 +36,58 @@ const YODA_LOGIN = 'pr1182589';
 // PASSO 2: DADOS DOS USUÁRIOS
 // =================================================================
 const usersData = {
+    // ================== GERENTE ==================
     'pr1182589': {
         name: 'Mestre Yoda',
         role: 'Gerente',
-        schedule: ['mon', 'tue', 'wed', 'thu', 'fri'],
         scheduleType: 'fixed',
+        schedule: ['mon', 'tue', 'wed', 'thu', 'fri'],
         color: '#3cb44b',
         avatar: 'img/yoda.png'
     },
+
+    // ================== ADMINISTRATIVO ==================
     'pr115447': {
         name: 'Bibi Perigosa',
         displayLetter: 'Bi',
         role: 'Administrativo',
-        schedule: ['thu', 'tue', 'wed'],
         scheduleType: '2_3',
+        schedule_2_days: ['tue', 'thu'],
+        schedule_3_days: ['tue', 'wed', 'thu'],
         color: '#ffe119',
         avatar: 'img/pepa.png'
     },
+    'prps019624': {
+        name: 'Mestre Gabe, o melhor!',
+        displayLetter: 'MG',
+        role: 'Administrativo',
+        scheduleType: '2_3',
+        schedule_2_days: ['wed', 'fri'],
+        schedule_3_days: ['mon', 'wed', 'fri'],
+        color: '#0f0fc0ff',
+        avatar: 'img/sofor.png'
+    },
+    'pr115627': {
+        name: 'Pedrin do coração',
+        displayLetter: 'P',
+        role: 'Administrativo',
+        scheduleType: '3_2',
+        schedule_2_days: ['tue', 'thu'],
+        schedule_3_days: ['tue', 'wed', 'thu'],
+        color: '#f032e6',
+        avatar: 'img/trump.png'
+    },
+    'pres324670': {
+        name: 'Samuquinha',
+        displayLetter: 'S',
+        role: 'Administrativo',
+        scheduleType: 'fixed',
+        schedule: ['mon', 'wed', 'fri'],
+        color: '#bfef45',
+        avatar: 'img/goku.jpg'
+    },
+
+    // ================== SECRETÁRIOS ==================
     'pr101546': {
         name: 'Fernanda',
         displayLetter: 'Fe',
@@ -90,47 +125,19 @@ const usersData = {
         name: 'Marcelle',
         displayLetter: 'M',
         role: 'Secretário',
-        scheduleType: '2_3',
-        schedule_2_days: ['mon', 'wed', 'fri'],
-        schedule_3_days: ['wed', 'fri'],
+        scheduleType: '3_2',
+        schedule_2_days: ['wed', 'fri'],
+        schedule_3_days: ['mon', 'wed', 'fri'],
         color: '#42d4f4',
         avatar: 'img/lula.png',
         meetingDay: 'fri'
-    },
-    'pr115627': {
-        name: 'Pedrin do coração',
-        displayLetter: 'P',
-        role: 'Administrativo',
-        schedule_2_days: ['tue', 'thu'],
-        schedule_3_days: ['tue', 'wed', 'thu'],
-        scheduleType: '3_2',
-        color: '#f032e6',
-        avatar: 'img/trump.png'
-    },
-    'pres324670': {
-        name: 'Samuquinha',
-        displayLetter: 'S',
-        role: 'Administrativo',
-        schedule: ['mon', 'wed', 'fri'],
-        scheduleType: 'fixed',
-        color: '#bfef45',
-        avatar: 'img/goku.jpg'
-    },
-    'prps019624': {
-        name: 'Mestre Gabe, o melhor!',
-        displayLetter: 'MG',
-        role: 'Administrativo',
-        schedule: ['wed', 'fri', 'mon'],
-        scheduleType: '2_3',
-        color: '#fabed4',
-        avatar: 'img/ben.png'
     },
     'pr100921': {
         name: 'Shirlike',
         displayLetter: 'Sh',
         role: 'Secretário',
-        schedule: ['wed', 'tue', 'mon'],
         scheduleType: 'fixed',
+        schedule: ['mon', 'tue', 'wed'],
         color: '#469990',
         avatar: 'img/Chloe.png',
         meetingDay: 'mon'
@@ -139,8 +146,8 @@ const usersData = {
         name: 'Tatyellen',
         displayLetter: 'T',
         role: 'Secretário',
-        schedule: ['mon', 'tue', 'thu'], 
         scheduleType: 'fixed',
+        schedule: ['mon', 'tue', 'thu'],
         color: '#dcbeff',
         avatar: 'img/pepa.png',
         meetingDay: 'wed'
@@ -1416,20 +1423,36 @@ function renderHybridCalendar() {
         dayCell.className = 'calendar-day';
         dayCell.textContent = i;
         const currentDate = new Date(Date.UTC(year, month, i));
-        if (!isBusinessDay(currentDate)) {
-            dayCell.classList.add('non-business-day');
-        } else if (currentUserLogin && isPresentialDay(currentUserLogin, currentDate)) {
-            const user = usersData[currentUserLogin];
-            if (user) {
-                const circle = document.createElement('div');
-                circle.className = 'user-presence-circle';
-                circle.style.backgroundColor = user.color;
-                circle.textContent = user.displayLetter || user.name.charAt(0);
-                dayCell.innerHTML = '';
-                dayCell.appendChild(circle);
-                dayCell.insertAdjacentHTML('beforeend', `<span style="font-size:10px; display:block; margin-top:2px;">${i}</span>`);
-            }
-        }
+        // VERIFICAÇÃO DE FÉRIAS (COM EMOJI)
+        if (currentUserLogin && isEmployeeOnVacation(currentUserLogin, currentDate)) {
+            // Estilos para o dia de férias
+            dayCell.style.backgroundColor = 'rgba(144, 238, 144, 0.5)';
+            dayCell.style.display = 'flex';         // Ativa o Flexbox
+            dayCell.style.flexDirection = 'column';  // Organiza os itens em coluna (um em cima do outro)
+            dayCell.style.justifyContent = 'center'; // Centraliza verticalmente
+            dayCell.style.alignItems = 'center';     // Centraliza horizontalmente (bônus)
+
+            // Conteúdo da célula
+            dayCell.innerHTML = `
+                <span style="font-size: 24px; line-height: 0.1; margin-bottom: -10px;">🏖️</span>
+                <span style="font-size: 14px;">${i}</span>
+            `;
+        } 
+        // Demais verificações com "else if"
+        else if (!isBusinessDay(currentDate)) {
+            dayCell.classList.add('non-business-day');
+        } else if (currentUserLogin && isPresentialDay(currentUserLogin, currentDate)) {
+            const user = usersData[currentUserLogin];
+            if (user) {
+                const circle = document.createElement('div');
+                circle.className = 'user-presence-circle';
+                circle.style.backgroundColor = user.color;
+                circle.textContent = user.displayLetter || user.name.charAt(0);
+                dayCell.innerHTML = '';
+                dayCell.appendChild(circle);
+                dayCell.insertAdjacentHTML('beforeend', `<span style="font-size:10px; display:block; margin-top:2px;">${i}</span>`);
+            }
+        }
         calendarGrid.appendChild(dayCell);
     }
 }
@@ -1471,10 +1494,12 @@ function renderPresenceTable() {
             const utcDate = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
             const td = document.createElement('td');
             const isPresent = isPresentialDay(login, utcDate);
-            if (isPresent) {
-                td.textContent = 'X';
-                td.classList.add('present');
-            }
+            const onVacation = isEmployeeOnVacation(login, utcDate); // Verifica se está de férias
+
+            if (isPresent && !onVacation) { // Só marca "X" se for dia presencial E NÃO for férias
+                td.textContent = 'X';
+                td.classList.add('present');
+            }
             if (!isBusinessDay(utcDate)) {
                 td.classList.add('non-business-day-cell');
             }
