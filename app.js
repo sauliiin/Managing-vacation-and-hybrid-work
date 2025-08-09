@@ -27,7 +27,7 @@ const holidays = [
 
 const availableAvatars = [
     'yoda.png', 'ben.png', 'trump.png', 'lula.png', 'goku.jpg', `capivaraFeliz.jpg`,
-    'Chloe.png', 'pepa.png', 'magali.png', 'sofor.png', `capivaraMood.jpg`
+    'Chloe.png', 'pepa.png', 'magali.png', `bozo.jpg`, 'sofor.png', `capivaraMood.jpg`
 ];
 
 const YODA_LOGIN = 'pr1182589';
@@ -136,8 +136,9 @@ const usersData = {
         name: 'Shirlike',
         displayLetter: 'Sh',
         role: 'Secretário',
-        scheduleType: 'fixed',
-        schedule: ['mon', 'tue', 'wed'],
+        scheduleType: '3_2',
+        schedule_2_days: ['tue', 'wed'],
+        schedule_3_days: ['mon', 'tue', 'wed'],
         color: '#469990',
         avatar: 'img/Chloe.png',
         meetingDay: 'mon'
@@ -146,10 +147,11 @@ const usersData = {
         name: 'Tatyellen',
         displayLetter: 'T',
         role: 'Secretário',
-        scheduleType: 'fixed',
-        schedule: ['mon', 'tue', 'thu'],
+        scheduleType: '3_2',
+        schedule_2_days: ['mon', 'tue'],
+        schedule_3_days: ['mon', 'tue', 'thu'],
         color: '#dcbeff',
-        avatar: 'img/pepa.png',
+        avatar: 'img/bozo.jpg',
         meetingDay: 'wed'
     }
 };
