@@ -3,12 +3,12 @@
 // =================================================================
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDM66hHUOkfAP3FrnfcQaF2aRiY_2jhnTM",
-    authDomain: "controle-de-ferias-45d25.firebaseapp.com",
-    projectId: "controle-de-ferias-45d25",
-    storageBucket: "controle-de-ferias-45d25.appspot.com",
-    messagingSenderId: "298345781850",
-    appId: "1:298345781850:web:0d21bb20a7fad821de9663"
+    apiKey: "AIzaSyDM66hHUOkfAP3FrnfcQaF2aRiY_2jhnTM",
+    authDomain: "controle-de-ferias-45d25.firebaseapp.com",
+    projectId: "controle-de-ferias-45d25",
+    storageBucket: "controle-de-ferias-45d25.appspot.com",
+    messagingSenderId: "298345781850",
+    appId: "1:298345781850:web:0d21bb20a7fad821de9663"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -20,16 +20,16 @@ const db = firebase.firestore();
 // ⭐ MODIFICADO: Estes são agora os dados INICIAIS para semear o banco.
 // Os dados reais serão carregados do Firestore para as variáveis globais abaixo.
 const initialHolidays = [
-    '2025-08-15', '2025-10-27', '2025-11-15', '2025-11-20', '2025-11-21',
-    '2025-12-08', '2025-12-25', '2025-12-31', '2026-01-01', '2026-01-02',
-    '2026-02-16', '2026-02-17', '2026-04-03', '2026-04-21', '2026-05-01',
-    '2026-06-04', '2026-09-07', '2026-10-12', '2026-11-02', '2026-11-15',
-    '2026-12-25'
+    '2025-08-15', '2025-10-27', '2025-11-15', '2025-11-20', '2025-11-21',
+    '2025-12-08', '2025-12-25', '2025-12-31', '2026-01-01', '2026-01-02',
+    '2026-02-16', '2026-02-17', '2026-04-03', '2026-04-21', '2026-05-01',
+    '2026-06-04', '2026-09-07', '2026-10-12', '2026-11-02', '2026-11-15',
+    '2026-12-25'
 ];
 
 const initialAvatars = [
-    'yoda.png', 'ben.png', 'trump.png', 'lula.png', 'goku.jpg', `capivaraFeliz.jpg`,
-    'Chloe.png', 'pepa.png', 'magali.png', `bozo.jpg`, 'sofor.png', `capivaraMood.jpg`
+    'yoda.png', 'ben.png', 'trump.png', 'lula.png', 'goku.jpg', `capivaraFeliz.jpg`,
+    'Chloe.png', 'pepa.png', 'magali.png', `bozo.jpg`, 'sofor.png', `capivaraMood.jpg`
 ];
 
 // ⭐ NOVO: Variáveis globais para armazenar as configurações dinâmicas
@@ -41,7 +41,7 @@ const YODA_LOGIN = 'pr1182589';
 // =================================================================
 // PASSO 2: DADOS DOS USUÁRIOS
 // =================================================================
-const usersData = {
+const initialUsersData = {
     // ================== GERENTE ==================
     'pr1182589': {
         name: 'Mestre Yoda',
@@ -167,6 +167,7 @@ let currentHybridDate = new Date();
 let currentPresenceDate = new Date();
 let substitutionsNeeded = [];
 let allDbData = {};
+let globalUsersData = {};
 
 // =================================================================
 // PASSO 3: INICIALIZAÇÃO E CONTROLE DA INTERFACE
@@ -178,69 +179,94 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ⭐ MODIFICADO: Função agora é async para aguardar o carregamento das configurações
 async function initializeApp() {
-    // ⭐ NOVO: Carrega as configurações globais (feriados/avatares) do Firestore
-    await loadGlobalSettings(); 
-
-    // Cria os painéis de admin do Yoda (estarão ocultos por padrão)
+    await loadGlobalSettings();
     createYodaAdminPanels();
+    populateUserDropdown();
 
-    const userSelect = document.getElementById('user-select');
-    Object.keys(usersData).forEach(login => {
-        const option = document.createElement('option');
-        option.value = login;
-        option.textContent = usersData[login].name;
-        userSelect.appendChild(option);
-    });
-    userSelect.addEventListener('change', onUserSelect);
-    renderVacationMap();
-    renderPresenceTable();
-    setupNavEventListeners();
-    setupAvatarModalEvents();
-    setupPasswordModalEvents();
+    // Apenas adiciona o listener. As outras funções de renderização
+    // serão chamadas pela onUserSelect ou já são independentes.
+    document.getElementById('user-select').addEventListener('change', onUserSelect);
+    
+    // Funções que rodam para todos, sem depender de um usuário selecionado
+    renderVacationMap(); 
+    renderPresenceTable();
+    
+    setupNavEventListeners();
+    setupAvatarModalEvents();
+    setupPasswordModalEvents();
+}
+
+
+// ⭐ ADICIONE ESTA NOVA FUNÇÃO AUXILIAR JUNTO COM A initializeApp
+function populateUserDropdown() {
+    const userSelect = document.getElementById('user-select');
+    // Limpa a lista (mantendo a primeira opção "-- Escolha...")
+    while (userSelect.options.length > 1) {
+        userSelect.remove(1);
+    }
+
+    // Pega os usuários, ordena por nome e preenche o menu
+    Object.keys(globalUsersData)
+        .sort((a, b) => {
+            // Se o nome não existir, usa uma string vazia como fallback para evitar erros.
+            const nameA = globalUsersData[a]?.name || '';
+            const nameB = globalUsersData[b]?.name || '';
+            return nameA.localeCompare(nameB);
+        })
+        .forEach(login => {
+            // Adiciona uma verificação extra para não adicionar usuários sem nome à lista
+            if (globalUsersData[login]?.name) {
+                const option = document.createElement('option');
+                option.value = login;
+                option.textContent = globalUsersData[login].name;
+                userSelect.appendChild(option);
+            }
+        });
 }
 
 
 function onUserSelect() {
-    const selectedLogin = document.getElementById('user-select').value;
-    const appContainer = document.getElementById('app-container');
-    const profileContainer = document.getElementById('profile-picture-container');
-    // ⭐ NOVO: Referência ao painel de administração
+    const selectedLogin = document.getElementById('user-select').value;
+    const appContainer = document.getElementById('app-container');
+    const profileContainer = document.getElementById('profile-picture-container');
     const yodaAdminPanel = document.getElementById('yoda-admin-panel');
 
-    if (selectedLogin === YODA_LOGIN && currentUserLogin !== YODA_LOGIN) {
-        const passwordModal = document.getElementById('password-modal');
-        const passwordInput = document.getElementById('jedi-password-input');
-        passwordModal.style.display = 'flex';
-        passwordInput.value = '';
-        passwordInput.focus();
-        return;
-    }
+    if (selectedLogin === YODA_LOGIN && currentUserLogin !== YODA_LOGIN) {
+        const passwordModal = document.getElementById('password-modal');
+        const passwordInput = document.getElementById('jedi-password-input');
+        passwordModal.style.display = 'flex';
+        passwordInput.value = '';
+        passwordInput.focus();
+        return;
+    }
 
-    currentUserLogin = selectedLogin;
-    
-    // ⭐ NOVO: Controla a visibilidade do painel de administração do Yoda
+    currentUserLogin = selectedLogin;
+
     if (currentUserLogin === YODA_LOGIN) {
         yodaAdminPanel.style.display = 'block';
-        renderYodaAdminPanels(); // Renderiza os dados nos painéis
+        renderYodaAdminPanels();
     } else {
         yodaAdminPanel.style.display = 'none';
     }
 
-    if (currentUserLogin) {
-        const userData = usersData[currentUserLogin];
-        document.getElementById('welcome-message').textContent = `Gerenciando dados de: ${userData.name}`;
-        appContainer.style.display = 'block';
-        profileContainer.style.display = 'block';
-        loadUserProfile(currentUserLogin);
-        loadUserVacations();
-        renderHybridCalendar();
-    } else {
-        document.getElementById('welcome-message').textContent = '';
-        appContainer.style.display = 'none';
-        profileContainer.style.display = 'none';
-    }
+    if (currentUserLogin) {
+        const userData = globalUsersData[currentUserLogin];
+        if (userData) {
+            document.getElementById('welcome-message').textContent = `Gerenciando dados de: ${userData.name}`;
+            appContainer.style.display = 'block';
+            profileContainer.style.display = 'block';
+            
+            // Funções que DEPENDEM de um usuário selecionado são chamadas AQUI
+            loadUserProfile(currentUserLogin);
+            loadUserVacations();
+            renderHybridCalendar();
+        }
+    } else {
+        document.getElementById('welcome-message').textContent = '';
+        appContainer.style.display = 'none';
+        profileContainer.style.display = 'none';
+    }
 }
-
 
 function setupPasswordModalEvents() {
     const passwordModal = document.getElementById('password-modal');
@@ -287,26 +313,31 @@ function setupPasswordModalEvents() {
 }
 
 async function loadUserProfile(login) {
-    const profileImg = document.getElementById('profile-img');
-    let avatarIdentifier = usersData[login]?.avatar || ''; // Valor padrão local
+    const profileImg = document.getElementById('profile-img');
+    
+    // Adiciona uma verificação para garantir que o usuário existe antes de continuar
+    if (!globalUsersData[login]) {
+        console.error(`Usuário com login ${login} não encontrado nos dados globais.`);
+        return;
+    }
+    
+    let avatarIdentifier = globalUsersData[login].avatar || '';
 
-    try {
-        const docRef = db.collection('funcionarios').doc(login);
-        const doc = await docRef.get();
-        
-        if (doc.exists && doc.data().avatar) {
-            avatarIdentifier = doc.data().avatar; // Pega o valor do banco (pode ser URL)
-        }
-        
-        // Lógica para definir o caminho da imagem
-        const isUrl = avatarIdentifier.startsWith('http');
-        profileImg.src = isUrl ? avatarIdentifier : `img/${avatarIdentifier}`;
+    try {
+        const docRef = db.collection('funcionarios').doc(login);
+        const doc = await docRef.get();
 
-    } catch (error) {
-        console.error("Erro ao carregar perfil do usuário:", error);
-        // Fallback em caso de erro
-        profileImg.src = usersData[login]?.avatar || '';
-    }
+        if (doc.exists && doc.data().avatar) {
+            avatarIdentifier = doc.data().avatar;
+        }
+
+        profileImg.src = getAvatarSrc(avatarIdentifier);
+
+    } catch (error) {
+        console.error("Erro ao carregar perfil do usuário:", error);
+        // Fallback: Se der erro na busca, usa o dado que já temos
+        profileImg.src = getAvatarSrc(globalUsersData[login].avatar);
+    }
 }
 
 async function saveAvatar(login, avatarUrl) {
@@ -354,7 +385,7 @@ function getAvatarSrc(identifier) {
     return `img/${identifier}`;
 }
 
-// 2. Substitua a função openAvatarModal
+
 function openAvatarModal() {
     const modal = document.getElementById('avatar-modal');
     const avatarGrid = document.getElementById('avatar-grid');
@@ -381,27 +412,6 @@ function openAvatarModal() {
     modal.style.display = 'flex';
 }
 
-// 3. Substitua a função loadUserProfile
-async function loadUserProfile(login) {
-    const profileImg = document.getElementById('profile-img');
-    let avatarIdentifier = usersData[login]?.avatar || '';
-
-    try {
-        const docRef = db.collection('funcionarios').doc(login);
-        const doc = await docRef.get();
-
-        if (doc.exists && doc.data().avatar) {
-            avatarIdentifier = doc.data().avatar;
-        }
-
-        profileImg.src = getAvatarSrc(avatarIdentifier); // Usa a função auxiliar
-
-    } catch (error) {
-        console.error("Erro ao carregar perfil do usuário:", error);
-        profileImg.src = getAvatarSrc(usersData[login]?.avatar);
-    }
-}
-
 // =================================================================
 // PASSO 4: LÓGICA DE FÉRIAS
 // =================================================================
@@ -426,12 +436,12 @@ function addVacationPeriod(period = { start: '', end: '' }) {
 }
 
 function isBusinessDay(date) {
-    const day = date.getUTCDay();
-    if (day === 0 || day === 6) return false;
-    const dateString = date.toISOString().slice(0, 10);
+    const day = date.getUTCDay();
+    if (day === 0 || day === 6) return false;
+    const dateString = date.toISOString().slice(0, 10);
     // Usa a variável global em vez da constante
-    if (globalHolidays.includes(dateString)) return false; 
-    return true;
+    if (globalHolidays.includes(dateString)) return false;
+    return true;
 }
 
 function calculateBusinessDays(start, end) {
@@ -503,8 +513,8 @@ async function saveVacations() {
 
     try {
         await db.collection('funcionarios').doc(currentUserLogin).set({
-            name: usersData[currentUserLogin].name,
-            role: usersData[currentUserLogin].role,
+            name: globalUsersData[currentUserLogin].name,
+            role: globalUsersData[currentUserLogin].role,
             vacationPeriods: periods
         }, { merge: true });
         alert('Férias salvas com sucesso!');
@@ -517,7 +527,7 @@ async function saveVacations() {
 }
 
 async function checkVacationConflicts(userPeriods) {
-    const currentUserData = usersData[currentUserLogin];
+    const currentUserData = globalUsersData[currentUserLogin];
     if (!currentUserData) return;
     const conflictGroup = (currentUserData.role === 'Secretário') ? ['Secretário'] : ['Administrativo', 'Gerente'];
     const querySnapshot = await db.collection('funcionarios').where('role', 'in', conflictGroup).get();
@@ -559,7 +569,7 @@ async function refreshSubstitutionData() {
         allDbData[doc.id] = doc.data();
         const docData = doc.data();
         const userLogin = doc.id;
-        const localUserData = usersData[userLogin];
+        const localUserData = globalUsersData[userLogin];
 
         if (localUserData && docData.vacationPeriods) {
             docData.vacationPeriods.forEach(period => {
@@ -589,9 +599,9 @@ async function refreshSubstitutionData() {
 async function renderVacationMap() {
     const mapListDiv = document.getElementById('vacation-map-list');
     mapListDiv.innerHTML = 'Carregando...';
-    
-    await refreshSubstitutionData(); 
-    
+
+    await refreshSubstitutionData();
+
     const allVacationsForDisplay = [];
     Object.values(allDbData).forEach(docData => {
         if (docData.vacationPeriods) {
@@ -647,10 +657,10 @@ async function loadAndApplySavedSubstitutions() {
                 if (subNeeded) {
                     // Guarda o estado atual da seleção (que veio do banco)
                     subNeeded.substituteId = data.substituteId;
-                    
+
                     // ⭐ NOVO: Guarda o estado ORIGINAL em uma propriedade separada.
                     // Isso é crucial para detectar se um usuário está tentando ALTERAR um dado já salvo.
-                    subNeeded.savedSubstituteId = data.substituteId; 
+                    subNeeded.savedSubstituteId = data.substituteId;
                 }
             }
         });
@@ -687,8 +697,8 @@ function renderAlertsAndResultsUI() {
             // Verifica se um substituto JÁ FOI atribuído e salvo para esta data
             if (sub.substituteId) {
                 // Se sim, busca o nome do substituto
-                const substituteName = usersData[sub.substituteId]?.name || 'Substituto Desconhecido';
-                
+                const substituteName = globalUsersData[sub.substituteId]?.name || 'Substituto Desconhecido';
+
                 // Formata a string conforme solicitado, com o nome do substituto e o emoji
                 p.innerHTML = `${formatDate(sub.date)} (${sub.employeeName}) - <strong>${substituteName}</strong> ✅`;
                 p.style.color = '#198754'; // Verde para indicar sucesso/resolvido
@@ -729,7 +739,7 @@ function renderAlertsAndResultsUI() {
         clearButton.onclick = clearRouletteData;
         alertContainerDiv.appendChild(clearButton);
     }
-    
+
     // Renderiza os resultados da última rodada da roleta, se houver
     if (substitutionsNeeded.length > 0) {
         renderSubstitutionResults();
@@ -804,11 +814,11 @@ function findEligibleSubstitutesFor(sub) {
     const eligibleCandidates = allowedByMatrix.filter(candidateId => {
         return !isEmployeeOnVacation(candidateId, sub.date);
     });
-    
+
     // Fallback: Se NINGUÉM da lista de regras estiver disponível, considera TODAS as outras secretárias que não estejam de férias.
     if (eligibleCandidates.length === 0) {
-        const allOtherSecretaries = Object.keys(usersData).filter(id => 
-            usersData[id].role === 'Secretário' && id !== sub.employeeId
+        const allOtherSecretaries = Object.keys(globalUsersData).filter(id =>
+            globalUsersData[id].role === 'Secretário' && id !== sub.employeeId
         );
         const fallbackCandidates = allOtherSecretaries.filter(id => !isEmployeeOnVacation(id, sub.date));
         return fallbackCandidates;
@@ -829,9 +839,9 @@ function assignSubstitutes() {
     pendingSubs.sort((a, b) => a.date - b.date);
 
     const assignmentCounts = {};
-    const allSecretaries = Object.keys(usersData).filter(id => usersData[id].role === 'Secretário');
+    const allSecretaries = Object.keys(globalUsersData).filter(id => globalUsersData[id].role === 'Secretário');
     allSecretaries.forEach(id => { assignmentCounts[id] = 0; });
-    
+
     substitutionsNeeded.forEach(sub => {
         if (sub.substituteId && assignmentCounts[sub.substituteId] !== undefined) {
             assignmentCounts[sub.substituteId]++;
@@ -855,7 +865,7 @@ function assignSubstitutes() {
                 eligibleCandidates = candidatesWithoutLast; // Usa a lista filtrada se ela não ficou vazia
             }
         }
-        
+
         let minAssignments = Infinity;
         eligibleCandidates.forEach(id => {
             if (assignmentCounts[id] < minAssignments) {
@@ -864,7 +874,7 @@ function assignSubstitutes() {
         });
 
         const bestCandidates = eligibleCandidates.filter(id => assignmentCounts[id] === minAssignments);
-        
+
         const randomIndex = Math.floor(Math.random() * bestCandidates.length);
         const chosenSubstituteId = bestCandidates[randomIndex];
 
@@ -910,16 +920,16 @@ async function runGlobalCrazyRoulette() {
 function renderSubstitutionResults() {
     const resultsDiv = document.getElementById('global-roulette-results');
     resultsDiv.innerHTML = `<h4>Resultado da Roleta Maluca:</h4>`;
-    
+
     const isOnVacation = (id, date) => isEmployeeOnVacation(id, date);
 
     if (substitutionsNeeded.length === 0) {
-         resultsDiv.innerHTML += `<p>Nenhuma substituição foi necessária.</p>`;
-         return;
+        resultsDiv.innerHTML += `<p>Nenhuma substituição foi necessária.</p>`;
+        return;
     }
-    
+
     // Ordena para exibição
-    substitutionsNeeded.sort((a,b) => a.date - b.date);
+    substitutionsNeeded.sort((a, b) => a.date - b.date);
 
     substitutionsNeeded.forEach(sub => {
         const resultLine = document.createElement('div');
@@ -928,8 +938,8 @@ function renderSubstitutionResults() {
         label.textContent = `${formatDate(sub.date)} (${sub.employeeName}) → `;
         resultLine.appendChild(label);
 
-        const manualOverrideOptions = Object.keys(usersData).filter(id =>
-            usersData[id].role === 'Secretário' &&
+        const manualOverrideOptions = Object.keys(globalUsersData).filter(id =>
+            globalUsersData[id].role === 'Secretário' &&
             id !== sub.employeeId &&
             !isOnVacation(id, sub.date)
         );
@@ -941,7 +951,7 @@ function renderSubstitutionResults() {
             select.dataset.employeeId = sub.employeeId;
 
             select.onchange = (e) => {
-                const changedSub = substitutionsNeeded.find(s => 
+                const changedSub = substitutionsNeeded.find(s =>
                     s.date.toISOString().slice(0, 10) === e.target.dataset.subDate &&
                     s.employeeId === e.target.dataset.employeeId
                 );
@@ -954,11 +964,11 @@ function renderSubstitutionResults() {
             emptyOption.textContent = "Escolha...";
             emptyOption.value = "";
             select.appendChild(emptyOption);
-            
+
             manualOverrideOptions.forEach(id => {
                 const option = document.createElement('option');
                 option.value = id;
-                option.textContent = usersData[id].name;
+                option.textContent = globalUsersData[id].name;
                 select.appendChild(option);
             });
 
@@ -1015,12 +1025,12 @@ async function saveSubstitutionsToDB() {
 
         // CONFLITO: Ocorre se um usuário que NÃO é o Yoda tenta alterar um dado já salvo.
         if (isChangingSavedData && isNotJedi) {
-            const originalSubstituteName = usersData[sub.savedSubstituteId]?.name || 'Desconhecido';
+            const originalSubstituteName = globalUsersData[sub.savedSubstituteId]?.name || 'Desconhecido';
             const conflictMessage = `Por favor, solicite a um Mestre Jedi a alteração: ${formatDate(sub.date)} (${sub.employeeName}) - ${originalSubstituteName} ✅`;
             conflictMessages.push(conflictMessage);
-            
+
             // Pula a adição desta alteração ao batch
-            return; 
+            return;
         }
 
         // Se não houver conflito, prepara para salvar.
@@ -1033,7 +1043,7 @@ async function saveSubstitutionsToDB() {
             employeeOnVacationId: sub.employeeId,
             employeeOnVacationName: sub.employeeName,
             substituteId: sub.substituteId,
-            substituteName: usersData[sub.substituteId].name,
+            substituteName: globalUsersData[sub.substituteId].name,
             savedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true }); // Usar merge para segurança
     });
@@ -1048,7 +1058,7 @@ async function saveSubstitutionsToDB() {
         alert("Nenhuma nova substituição válida para salvar.");
         if (saveButton) saveButton.disabled = false;
         // Recarrega o mapa para reverter visualmente as alterações bloqueadas nos dropdowns
-        await renderVacationMap(); 
+        await renderVacationMap();
         return;
     }
 
@@ -1084,9 +1094,9 @@ async function clearRouletteData() {
     if (button) button.disabled = true;
     try {
         alert("Apagando os dados... Por favor, aguarde.");
-        
+
         const subsSnapshot = await db.collection('substituicoes').get();
-        if(subsSnapshot.empty) {
+        if (subsSnapshot.empty) {
             alert("Nenhum dado de substituição para apagar.");
             if (button) button.disabled = false;
             return;
@@ -1115,13 +1125,13 @@ async function clearRouletteData() {
 function renderSubstitutionResults() {
     const resultsDiv = document.getElementById('global-roulette-results');
     resultsDiv.innerHTML = `<h4>Resultado da Roleta Maluca:</h4>`;
-    
+
     // Função auxiliar para verificar férias (evita chamar a função global muitas vezes)
     const isOnVacation = (id, date) => isEmployeeOnVacation(id, date);
 
     if (substitutionsNeeded.length === 0) {
-         resultsDiv.innerHTML += `<p>Nenhuma substituição foi necessária.</p>`;
-         return;
+        resultsDiv.innerHTML += `<p>Nenhuma substituição foi necessária.</p>`;
+        return;
     }
 
     substitutionsNeeded.forEach(sub => {
@@ -1132,8 +1142,8 @@ function renderSubstitutionResults() {
         resultLine.appendChild(label);
 
         // Opções para o dropdown de override manual
-        const manualOverrideOptions = Object.keys(usersData).filter(id =>
-            usersData[id].role === 'Secretário' &&
+        const manualOverrideOptions = Object.keys(globalUsersData).filter(id =>
+            globalUsersData[id].role === 'Secretário' &&
             id !== sub.employeeId &&
             !isOnVacation(id, sub.date)
         );
@@ -1145,7 +1155,7 @@ function renderSubstitutionResults() {
             select.dataset.employeeId = sub.employeeId;
 
             select.onchange = (e) => {
-                const changedSub = substitutionsNeeded.find(s => 
+                const changedSub = substitutionsNeeded.find(s =>
                     s.date.toISOString().slice(0, 10) === e.target.dataset.subDate &&
                     s.employeeId === e.target.dataset.employeeId
                 );
@@ -1156,16 +1166,16 @@ function renderSubstitutionResults() {
 
             // Opção vazia
             const emptyOption = document.createElement('option');
-            emptyOption.textContent = sub.substituteId ? usersData[sub.substituteId].name : "Escolha...";
+            emptyOption.textContent = sub.substituteId ? globalUsersData[sub.substituteId].name : "Escolha...";
             emptyOption.value = sub.substituteId || "";
             select.appendChild(emptyOption);
-            
+
             // Preenche o select com as outras opções
             manualOverrideOptions.forEach(id => {
-                if(id === sub.substituteId) return; // Já foi adicionado
+                if (id === sub.substituteId) return; // Já foi adicionado
                 const option = document.createElement('option');
                 option.value = id;
-                option.textContent = usersData[id].name;
+                option.textContent = globalUsersData[id].name;
                 select.appendChild(option);
             });
 
@@ -1215,7 +1225,7 @@ async function saveSubstitutionsToDB() {
     // Usando 'for...of' para ter controle explícito com 'continue'
     for (const sub of substitutionsNeeded) {
         const subDateStr = sub.date.toISOString().slice(0, 10);
-        
+
         // Log para depuração: mostra o estado do item antes de decidir
         console.log(`Verificando: ${subDateStr} (${sub.employeeName})`, {
             selected: sub.substituteId,
@@ -1227,7 +1237,7 @@ async function saveSubstitutionsToDB() {
         if (!sub.substituteId || sub.substituteId === "") {
             continue; // Pula para a próxima iteração
         }
-        
+
         // ==================================================
         // ⭐ LÓGICA DE CONFLITO E PERMISSÃO (REVISADA) ⭐
         // ==================================================
@@ -1236,14 +1246,14 @@ async function saveSubstitutionsToDB() {
 
         // CONFLITO: Ocorre se um usuário que NÃO é o Yoda tenta alterar um dado já salvo.
         if (isChangingSavedData && isNotJedi) {
-            const originalSubstituteName = usersData[sub.savedSubstituteId]?.name || 'Desconhecido';
+            const originalSubstituteName = globalUsersData[sub.savedSubstituteId]?.name || 'Desconhecido';
             const conflictMessage = `Por favor, solicite a um Mestre Jedi a alteração: ${formatDate(sub.date)} (${sub.employeeName}) - ${originalSubstituteName} ✅`;
             conflictMessages.push(conflictMessage);
 
             console.warn('CONFLITO DETECTADO!', { sub, conflictMessage });
-            
+
             // Pula a adição desta alteração ao batch, passando para o próximo item
-            continue; 
+            continue;
         }
 
         // Se não houver conflito, prepara para salvar.
@@ -1255,10 +1265,10 @@ async function saveSubstitutionsToDB() {
             employeeOnVacationId: sub.employeeId,
             employeeOnVacationName: sub.employeeName,
             substituteId: sub.substituteId,
-            substituteName: usersData[sub.substituteId].name,
+            substituteName: globalUsersData[sub.substituteId].name,
             savedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
-        
+
         console.log('OK para salvar:', { sub });
     }
 
@@ -1279,7 +1289,7 @@ async function saveSubstitutionsToDB() {
             saveButton.textContent = 'Salvar Resultados no Banco de Dados';
         }
         // Recarrega o mapa para reverter visualmente as alterações bloqueadas
-        await renderVacationMap(); 
+        await renderVacationMap();
         return;
     }
 
@@ -1319,9 +1329,9 @@ async function clearRouletteData() {
     if (button) button.disabled = true;
     try {
         alert("Apagando os dados... Por favor, aguarde.");
-        
+
         const subsSnapshot = await db.collection('substituicoes').get();
-        if(subsSnapshot.empty) {
+        if (subsSnapshot.empty) {
             alert("Nenhum dado de substituição para apagar.");
             if (button) button.disabled = false;
             return;
@@ -1359,7 +1369,7 @@ async function clearRouletteData() {
     if (button) button.disabled = true;
     try {
         alert("Apagando os dados... Por favor, aguarde.");
-        
+
         const subsSnapshot = await db.collection('substituicoes').get();
         const batch = db.batch();
         subsSnapshot.forEach(doc => {
@@ -1426,7 +1436,7 @@ function showRoulette(onSpinEndCallback) {
     SECRETARY_IDS_FOR_ANIMATION.forEach((id, index) => {
         const label = document.createElement('div');
         label.className = 'roulette-label';
-        label.textContent = usersData[id]?.name || 'Desconhecido';
+        label.textContent = globalUsersData[id]?.name || 'Desconhecido';
         const labelAngle = (index * angleStep) + (angleStep / 2);
         const angleRad = (labelAngle - 90) * (Math.PI / 180);
         const x = wheelRadius + labelRadius * Math.cos(angleRad);
@@ -1471,58 +1481,103 @@ function spinTheWheel(onSpinEndCallback) {
 // =================================================================
 
 /**
- * Carrega as configurações globais (feriados, avatares) do Firestore.
- * Se não existirem, cria o documento de configuração com os valores iniciais.
+ * Carrega as configurações globais e os dados dos funcionários.
+ * Esta função agora MESCLA os dados iniciais com os dados do Firestore
+ * para garantir que todos os funcionários existam, preservando as alterações do usuário.
+ */
+/**
+ * Carrega as configurações globais e os dados dos funcionários.
+ * Esta função mescla os dados iniciais com os do Firestore de forma "profunda",
+ * garantindo que nenhum campo padrão seja perdido e que todas as alterações do
+ * usuário sejam preservadas.
  */
 async function loadGlobalSettings() {
+    // 1. Carrega Configurações (Feriados e Avatares) - Sem alterações aqui
     const configRef = db.collection('configuracoes').doc('geral');
     try {
         const doc = await configRef.get();
         if (doc.exists) {
-            console.log("Configurações carregadas do Firestore.");
             const data = doc.data();
             globalHolidays = data.holidays || initialHolidays;
             globalAvatars = data.availableAvatars || initialAvatars;
         } else {
-            console.log("Nenhuma configuração encontrada. Semeando o banco de dados com valores iniciais.");
-            await configRef.set({
-                holidays: initialHolidays,
-                availableAvatars: initialAvatars
-            });
+            await configRef.set({ holidays: initialHolidays, availableAvatars: initialAvatars });
             globalHolidays = initialHolidays;
             globalAvatars = initialAvatars;
         }
     } catch (error) {
         console.error("Erro ao carregar configurações globais:", error);
-        // Fallback para os dados iniciais em caso de erro de leitura
-        globalHolidays = initialHolidays;
-        globalAvatars = initialAvatars;
+        globalHolidays = initialHolidays; // Fallback
+        globalAvatars = initialAvatars; // Fallback
     }
+
+    // --- Lógica de Sincronização de Funcionários (VERSÃO FINAL) ---
+
+    // 2. Carrega todos os usuários que existem no Firestore
+    const usersSnapshot = await db.collection('funcionarios').get();
+    const loadedUsersFromFirestore = {};
+    usersSnapshot.forEach(doc => {
+        loadedUsersFromFirestore[doc.id] = doc.data();
+    });
+
+    // 3. Cria o objeto de dados final, que será usado na aplicação
+    const finalUsersData = {};
+    const batch = db.batch();
+    let dbNeedsUpdate = false;
+
+    // 4. Itera sobre a lista de usuários INICIAL (a fonte da verdade sobre quem deve existir)
+    Object.keys(initialUsersData).forEach(login => {
+        const initialUser = initialUsersData[login];
+        const firestoreUser = loadedUsersFromFirestore[login];
+
+        if (firestoreUser) {
+            // O usuário EXISTE no Firestore.
+            // Mescla as propriedades: as do Firestore sobrescrevem as iniciais.
+            // Isso preserva os dados iniciais (como 'schedule') se eles foram apagados do DB,
+            // e mantém as alterações do usuário (como 'avatar').
+            finalUsersData[login] = { ...initialUser, ...firestoreUser };
+        } else {
+            // O usuário NÃO EXISTE no Firestore.
+            // Usa os dados iniciais e prepara para adicioná-los ao banco.
+            finalUsersData[login] = initialUser;
+            
+            console.log(`Adicionando usuário ausente ao Firestore: ${initialUser.name}`);
+            const userRef = db.collection('funcionarios').doc(login);
+            batch.set(userRef, initialUser);
+            dbNeedsUpdate = true;
+        }
+    });
+
+    // 5. Se houver usuários novos para adicionar, envia para o banco de uma vez
+    if (dbNeedsUpdate) {
+        console.log("Sincronizando novos usuários com o banco de dados...");
+        await batch.commit();
+    }
+
+    // 6. Define a variável global com os dados finalmente corretos e completos
+    globalUsersData = finalUsersData;
 }
+
 
 /**
  * Cria a estrutura HTML para os painéis de administração do Yoda.
  * É chamado uma vez na inicialização do app.
  */
-// SUBSTITUA A SUA FUNÇÃO INTEIRA POR ESTA
 function createYodaAdminPanels() {
     const yodaPanelContainer = document.createElement('div');
-    
-    // ⭐ 1. ADICIONA A CLASSE 'card' PARA HERDAR OS ESTILOS PADRÃO (FUNDO BRANCO, ESPAÇAMENTO, ETC.)
     yodaPanelContainer.classList.add('card');
-
-    // MANTÉM OS ESTILOS ÚNICOS DO YODA E REMOVE OS REDUNDANTES
     yodaPanelContainer.id = 'yoda-admin-panel';
-    yodaPanelContainer.style.display = 'none'; // Começa oculto
-    yodaPanelContainer.style.border = '2px solid #3cb44b'; // Borda verde especial
-    // As linhas de padding, border-radius e margin foram removidas para usar o padrão da classe 'card'
+    yodaPanelContainer.style.display = 'none';
+    yodaPanelContainer.style.border = '2px solid #3cb44b';
+
+    const listStyle = "max-height: 180px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;";
 
     yodaPanelContainer.innerHTML = `
         <h2 style="text-align: center; color: #3cb44b;">Painel do Mestre Jedi</h2>
         
         <div id="holiday-manager-container" class="admin-panel-section" style="margin-bottom: 20px;">
             <h4>Gerenciar Feriados Globais 🗓️</h4>
-            <div id="holiday-list" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
+            <div id="holiday-list" style="${listStyle}"></div>
             <div>
                 <input type="date" id="new-holiday-input">
                 <button id="add-holiday-button">Adicionar Feriado</button>
@@ -1531,9 +1586,64 @@ function createYodaAdminPanels() {
         
         <hr>
 
+        <div id="user-manager-container" class="admin-panel-section">
+            <h4>Gerenciar Funcionários 🧑‍🤝‍🧑</h4>
+            <div id="user-list" style="${listStyle}"></div>
+            <div class="add-user-form" style="margin-top: 15px;">
+                <h5>Adicionar Novo Funcionário</h5>
+                <input type="text" id="new-user-login" placeholder="Login (ex: pr123456)" style="margin-right: 5px;">
+                <input type="text" id="new-user-name" placeholder="Nome Completo" style="margin-right: 5px;">
+                <select id="new-user-role" style="margin-right: 5px;">
+                    <option value="Administrativo">Administrativo</option>
+                    <option value="Secretário">Secretário</option>
+                    <option value="Gerente">Gerente</option>
+                </select>
+                <button id="add-user-button">Adicionar Funcionário</button>
+            </div>
+        </div>
+
+        <hr>
+
+        <div id="schedule-manager-container" class="admin-panel-section">
+            <h4>Tipo de Escala ⚖️</h4>
+            <div style="margin-bottom: 10px;">
+                <label for="schedule-user-select">Funcionário:</label>
+                <select id="schedule-user-select">
+                    <option value="">-- Escolha um funcionário --</option>
+                </select>
+            </div>
+
+            <div id="schedule-editor" style="display: none; padding-left: 15px; border-left: 2px solid #eee;">
+                <div style="margin-bottom: 10px;">
+                    <label for="schedule-type-select">Tipo de Escala:</label>
+                    <select id="schedule-type-select">
+                        <option value="fixed">Fixo</option>
+                        <option value="2_3">Variável (2 dias / 3 dias)</option>
+                        <option value="3_2">Variável (3 dias / 2 dias)</option>
+                    </select>
+                </div>
+
+                <div id="fixed-schedule-settings" style="display: none;">
+                    <p><strong>Dias fixos da semana:</strong></p>
+                    <div id="fixed-days-checkboxes"></div>
+                </div>
+
+                <div id="variable-schedule-settings" style="display: none;">
+                    <p><strong>Semana de 2 dias:</strong></p>
+                    <div id="variable-days-2-checkboxes"></div>
+                    <p style="margin-top: 10px;"><strong>Semana de 3 dias:</strong></p>
+                    <div id="variable-days-3-checkboxes"></div>
+                </div>
+                
+                <button id="save-schedule-button" style="margin-top: 15px;">Salvar Escala</button>
+            </div>
+        </div>
+
+        <hr>
+
         <div id="avatar-manager-container" class="admin-panel-section" style="margin-top: 20px;">
             <h4>Gerenciar Avatares Disponíveis 🖼️</h4>
-            <div id="avatar-list" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
+            <div id="avatar-list" style="${listStyle}"></div>
             <div>
                 <input type="file" id="new-avatar-input" accept="image/png, image/jpeg, image/gif">
                 <button id="add-avatar-button">Adicionar Avatar</button>
@@ -1541,14 +1651,19 @@ function createYodaAdminPanels() {
         </div>
     `;
 
-    // Adiciona o painel completo logo após o container do calendário híbrido
     const hybridCalendarContainer = document.getElementById('hybrid-calendar-container');
     if (hybridCalendarContainer) {
         hybridCalendarContainer.parentNode.insertBefore(yodaPanelContainer, hybridCalendarContainer.nextSibling);
 
-        // Adiciona os event listeners para os botões
+        // Adiciona os event listeners para os botões e seletores
         document.getElementById('add-holiday-button').addEventListener('click', handleAddHoliday);
         document.getElementById('add-avatar-button').addEventListener('click', handleAddAvatar);
+        document.getElementById('add-user-button').addEventListener('click', handleAddUser);
+        
+        // Listeners para o novo painel
+        document.getElementById('schedule-user-select').addEventListener('change', renderScheduleEditor);
+        document.getElementById('schedule-type-select').addEventListener('change', updateScheduleEditorUI);
+        document.getElementById('save-schedule-button').addEventListener('click', handleSaveSchedule);
     }
 }
 
@@ -1556,45 +1671,101 @@ function createYodaAdminPanels() {
  * Renderiza/atualiza o conteúdo dos painéis de administração do Yoda com os dados atuais.
  */
 function renderYodaAdminPanels() {
-    // Renderiza a lista de feriados
+    const itemMarginBottom = '3px';
+
+    // Renderiza a lista de feriados (sem alterações)
     const holidayListDiv = document.getElementById('holiday-list');
     holidayListDiv.innerHTML = '';
     globalHolidays.sort().forEach(holiday => {
         const item = document.createElement('div');
         item.style.display = 'flex';
         item.style.justifyContent = 'space-between';
-        item.style.marginBottom = '5px';
-        item.innerHTML = `
-            <span>${formatDate(holiday)}</span>
-            <button class="remove-btn" data-holiday="${holiday}">❌</button>
-        `;
+        item.style.marginBottom = itemMarginBottom;
+        item.innerHTML = `<span>${formatDate(holiday)}</span><button class="remove-btn" data-holiday="${holiday}">❌</button>`;
         holidayListDiv.appendChild(item);
     });
-    
-    // Adiciona evento de clique para os botões de remover feriado
     holidayListDiv.querySelectorAll('.remove-btn').forEach(button => {
         button.addEventListener('click', (e) => handleRemoveHoliday(e.currentTarget.dataset.holiday));
     });
 
-    // Renderiza a lista de avatares
-    const avatarListDiv = document.getElementById('avatar-list');
-    avatarListDiv.innerHTML = '';
-    globalAvatars.sort().forEach(avatar => {
+    // Renderiza a lista de funcionários COM FUNCIONALIDADES
+    const userListDiv = document.getElementById('user-list');
+    userListDiv.innerHTML = '';
+    const roles = ["Administrativo", "Secretário", "Gerente"];
+
+    Object.keys(globalUsersData).forEach(login => {
+        const user = globalUsersData[login];
+        if (login === YODA_LOGIN) return; // Não permite editar o Mestre Yoda
+
         const item = document.createElement('div');
         item.style.display = 'flex';
         item.style.justifyContent = 'space-between';
-        item.style.marginBottom = '5px';
+        item.style.marginBottom = itemMarginBottom;
+        
+        const roleOptions = roles.map(r => `<option value="${r}" ${user.role === r ? 'selected' : ''}>${r}</option>`).join('');
+
         item.innerHTML = `
-            <span>${avatar}</span>
+            <span>${user.name} (${login})</span>
+            <div class="user-actions">
+                <select data-login="${login}" class="role-select" style="margin-right: 5px;">${roleOptions}</select>
+                <button class="remove-btn" data-login="${login}" data-name="${user.name}">❌</button>
+            </div>
+        `;
+        userListDiv.appendChild(item);
+    });
+    
+    // Adiciona os event listeners para os novos botões e selects
+    userListDiv.querySelectorAll('.remove-btn').forEach(button => {
+        button.addEventListener('click', (e) => handleRemoveUser(e.currentTarget.dataset.login, e.currentTarget.dataset.name));
+    });
+    userListDiv.querySelectorAll('.role-select').forEach(select => {
+        select.addEventListener('change', (e) => handleRoleChange(e.currentTarget.dataset.login, e.target.value));
+    });
+
+    // Renderiza a lista de avatares (sem alterações)
+    const avatarListDiv = document.getElementById('avatar-list');
+    avatarListDiv.innerHTML = '';
+    globalAvatars.forEach(avatar => {
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.alignItems = 'center';
+        item.style.marginBottom = itemMarginBottom;
+        const avatarSrc = getAvatarSrc(avatar);
+        item.innerHTML = `
+            <div style="display: flex; align-items: center;">
+                <img src="${avatarSrc}" alt="avatar" style="width: 24px; height: 24px; border-radius: 50%; margin-right: 8px;">
+                <span style="font-size: 0.9em;">${avatar.length > 30 ? avatar.substring(0,30) + '...' : avatar}</span>
+            </div>
             <button class="remove-btn" data-avatar="${avatar}">❌</button>
         `;
         avatarListDiv.appendChild(item);
     });
-    
-    // Adiciona evento de clique para os botões de remover avatar
     avatarListDiv.querySelectorAll('.remove-btn').forEach(button => {
         button.addEventListener('click', (e) => handleRemoveAvatar(e.currentTarget.dataset.avatar));
     });
+    // ⭐ NOVO TRECHO PARA POPULAR O SELETOR DE ESCALA ⭐
+    const scheduleUserSelect = document.getElementById('schedule-user-select');
+    // Salva o valor que estava selecionado antes de limpar
+    const previouslySelected = scheduleUserSelect.value;
+    scheduleUserSelect.innerHTML = '<option value="">-- Escolha um funcionário --</option>'; // Limpa e adiciona a opção padrão
+
+    Object.keys(globalUsersData)
+        .sort((a, b) => globalUsersData[a].name.localeCompare(globalUsersData[b].name))
+        .forEach(login => {
+            const user = globalUsersData[login];
+            const option = document.createElement('option');
+            option.value = login;
+            option.textContent = user.name;
+            scheduleUserSelect.appendChild(option);
+        });
+
+    // Restaura a seleção anterior, se ainda for válida
+    scheduleUserSelect.value = previouslySelected;
+    // Esconde o editor se nenhum usuário estiver selecionado
+    if (!scheduleUserSelect.value) {
+        document.getElementById('schedule-editor').style.display = 'none';
+    }
 }
 
 /**
@@ -1732,6 +1903,79 @@ async function handleRemoveAvatar(avatarToRemove) {
     }
 }
 
+
+// SUBSTITUA A SUA FUNÇÃO INTEIRA POR ESTA
+async function handleAddUser() {
+    const login = document.getElementById('new-user-login').value.trim();
+    const name = document.getElementById('new-user-name').value.trim();
+    const role = document.getElementById('new-user-role').value;
+
+    if (!login || !name) {
+        alert("Login e Nome são obrigatórios.");
+        return;
+    }
+    if (globalUsersData[login]) {
+        alert("Este login já existe!");
+        return;
+    }
+
+    const newUser = {
+        name: name,
+        role: role,
+        scheduleType: 'fixed',
+        schedule: ['mon', 'tue', 'wed', 'thu', 'fri'],
+        color: '#' + Math.floor(Math.random() * 16777215).toString(16).padStart(6, '0'),
+        avatar: ''
+    };
+
+    try {
+        await db.collection('funcionarios').doc(login).set(newUser);
+        alert(`Funcionário ${name} adicionado com sucesso!`);
+
+        document.getElementById('new-user-login').value = '';
+        document.getElementById('new-user-name').value = '';
+
+        await loadGlobalSettings();
+        populateUserDropdown(); // ⭐ ATUALIZAÇÃO FOCADA AQUI
+        renderYodaAdminPanels();
+
+    } catch (error) {
+        console.error("Erro ao adicionar funcionário:", error);
+        alert("Falha ao adicionar funcionário.");
+    }
+}
+
+async function handleRemoveUser(login, name) {
+    if (!confirm(`Tem certeza que deseja remover o funcionário ${name} (${login})? Esta ação é irreversível.`)) return;
+
+    try {
+        await db.collection('funcionarios').doc(login).delete();
+        alert("Funcionário removido com sucesso!");
+
+        await loadGlobalSettings();
+        populateUserDropdown(); // ⭐ ATUALIZAÇÃO FOCADA AQUI
+        renderYodaAdminPanels();
+
+    } catch (error) {
+        console.error("Erro ao remover funcionário:", error);
+        alert("Falha ao remover funcionário.");
+    }
+}
+
+async function handleRoleChange(login, newRole) {
+    try {
+        await db.collection('funcionarios').doc(login).update({ role: newRole });
+        // ⭐ CORRIGIDO AQUI
+        alert(`Função de ${globalUsersData[login].name} atualizada para ${newRole}.`);
+
+        await loadGlobalSettings();
+        renderYodaAdminPanels();
+    } catch (error) {
+        console.error("Erro ao alterar função:", error);
+        alert("Falha ao alterar a função.");
+    }
+}
+
 // =================================================================
 // PASSO 6: FUNÇÕES AUXILIARES E DE VISUALIZAÇÃO RESTANTES
 // =================================================================
@@ -1758,35 +2002,35 @@ function renderHybridCalendar() {
         dayCell.textContent = i;
         const currentDate = new Date(Date.UTC(year, month, i));
         // VERIFICAÇÃO DE FÉRIAS (COM EMOJI)
-        if (currentUserLogin && isEmployeeOnVacation(currentUserLogin, currentDate)) {
-            // Estilos para o dia de férias
-            dayCell.style.backgroundColor = 'rgba(144, 238, 144, 0.5)';
-            dayCell.style.display = 'flex';         // Ativa o Flexbox
-            dayCell.style.flexDirection = 'column';  // Organiza os itens em coluna (um em cima do outro)
-            dayCell.style.justifyContent = 'center'; // Centraliza verticalmente
-            dayCell.style.alignItems = 'center';     // Centraliza horizontalmente (bônus)
+        if (currentUserLogin && isEmployeeOnVacation(currentUserLogin, currentDate)) {
+            // Estilos para o dia de férias
+            dayCell.style.backgroundColor = 'rgba(144, 238, 144, 0.5)';
+            dayCell.style.display = 'flex';         // Ativa o Flexbox
+            dayCell.style.flexDirection = 'column';  // Organiza os itens em coluna (um em cima do outro)
+            dayCell.style.justifyContent = 'center'; // Centraliza verticalmente
+            dayCell.style.alignItems = 'center';     // Centraliza horizontalmente (bônus)
 
-            // Conteúdo da célula
-            dayCell.innerHTML = `
+            // Conteúdo da célula
+            dayCell.innerHTML = `
                 <span style="font-size: 24px; line-height: 0.1; margin-bottom: -10px;">🏖️</span>
                 <span style="font-size: 14px;">${i}</span>
             `;
-        } 
-        // Demais verificações com "else if"
-        else if (!isBusinessDay(currentDate)) {
-            dayCell.classList.add('non-business-day');
-        } else if (currentUserLogin && isPresentialDay(currentUserLogin, currentDate)) {
-            const user = usersData[currentUserLogin];
-            if (user) {
-                const circle = document.createElement('div');
-                circle.className = 'user-presence-circle';
-                circle.style.backgroundColor = user.color;
-                circle.textContent = user.displayLetter || user.name.charAt(0);
-                dayCell.innerHTML = '';
-                dayCell.appendChild(circle);
-                dayCell.insertAdjacentHTML('beforeend', `<span style="font-size:10px; display:block; margin-top:2px;">${i}</span>`);
-            }
-        }
+        }
+        // Demais verificações com "else if"
+        else if (!isBusinessDay(currentDate)) {
+            dayCell.classList.add('non-business-day');
+        } else if (currentUserLogin && isPresentialDay(currentUserLogin, currentDate)) {
+            const user = globalUsersData[currentUserLogin];
+            if (user) {
+                const circle = document.createElement('div');
+                circle.className = 'user-presence-circle';
+                circle.style.backgroundColor = user.color;
+                circle.textContent = user.displayLetter || user.name.charAt(0);
+                dayCell.innerHTML = '';
+                dayCell.appendChild(circle);
+                dayCell.insertAdjacentHTML('beforeend', `<span style="font-size:10px; display:block; margin-top:2px;">${i}</span>`);
+            }
+        }
         calendarGrid.appendChild(dayCell);
     }
 }
@@ -1800,7 +2044,7 @@ function renderPresenceTable() {
     const startOfWeek = new Date(currentPresenceDate);
     startOfWeek.setDate(startOfWeek.getDate() - (startOfWeek.getDay() === 0 ? 6 : startOfWeek.getDay() - 1));
     document.getElementById('current-week-presence').textContent = `Semana de ${formatDate(startOfWeek)}`;
-    
+
     const headerRow = document.createElement('tr');
     headerRow.innerHTML = '<th>Funcionário</th>';
     const weekDays = ['Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta'];
@@ -1818,8 +2062,8 @@ function renderPresenceTable() {
     }
     tableHead.appendChild(headerRow);
 
-    Object.keys(usersData).forEach(login => {
-        const user = usersData[login];
+    Object.keys(globalUsersData).forEach(login => {
+        const user = globalUsersData[login];
         const row = document.createElement('tr');
         row.innerHTML = `<td>${user.name}</td>`;
         for (let i = 0; i < 5; i++) {
@@ -1828,12 +2072,12 @@ function renderPresenceTable() {
             const utcDate = new Date(Date.UTC(currentDate.getFullYear(), currentDate.getMonth(), currentDate.getDate()));
             const td = document.createElement('td');
             const isPresent = isPresentialDay(login, utcDate);
-            const onVacation = isEmployeeOnVacation(login, utcDate); // Verifica se está de férias
+            const onVacation = isEmployeeOnVacation(login, utcDate); // Verifica se está de férias
 
-            if (isPresent && !onVacation) { // Só marca "X" se for dia presencial E NÃO for férias
-                td.textContent = 'X';
-                td.classList.add('present');
-            }
+            if (isPresent && !onVacation) { // Só marca "X" se for dia presencial E NÃO for férias
+                td.textContent = 'X';
+                td.classList.add('present');
+            }
             if (!isBusinessDay(utcDate)) {
                 td.classList.add('non-business-day-cell');
             }
@@ -1844,7 +2088,7 @@ function renderPresenceTable() {
 }
 
 function isPresentialDay(login, date) {
-    const user = usersData[login];
+    const user = globalUsersData[login];
     if (!user || !isBusinessDay(date)) return false;
 
     const dayOfWeekStr = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'][date.getUTCDay()];
@@ -1852,7 +2096,7 @@ function isPresentialDay(login, date) {
     if (user.scheduleType === 'fixed') {
         return user.schedule.includes(dayOfWeekStr);
     }
-    
+
     const referenceDate = new Date('2025-08-04T12:00:00Z');
     const referenceWeek = getWeekNumber(referenceDate);
     const currentWeek = getWeekNumber(date);
@@ -1869,7 +2113,7 @@ function isPresentialDay(login, date) {
     } else {
         presentialDaysForThisWeek = user.schedule ? user.schedule.slice(0, daysThisWeek) : [];
     }
-    
+
     return presentialDaysForThisWeek.includes(dayOfWeekStr);
 }
 
@@ -1915,4 +2159,128 @@ function setupNavEventListeners() {
         currentPresenceDate.setDate(currentPresenceDate.getDate() + 7);
         renderPresenceTable();
     });
+}
+
+// =================================================================
+// ⭐ NOVAS FUNÇÕES: GERENCIAMENTO DE ESCALA
+// =================================================================
+
+/**
+ * Popula e exibe o editor de escala quando um funcionário é selecionado.
+ */
+function renderScheduleEditor() {
+    const selectedLogin = document.getElementById('schedule-user-select').value;
+    const editorDiv = document.getElementById('schedule-editor');
+    
+    if (!selectedLogin) {
+        editorDiv.style.display = 'none';
+        return;
+    }
+
+    const userData = globalUsersData[selectedLogin];
+    if (!userData) {
+        console.error("Dados do usuário não encontrados para:", selectedLogin);
+        editorDiv.style.display = 'none';
+        return;
+    }
+
+    // Popula o tipo de escala
+    document.getElementById('schedule-type-select').value = userData.scheduleType || 'fixed';
+
+    const daysOfWeek = [
+        { id: 'mon', name: 'Seg' }, { id: 'tue', name: 'Ter' },
+        { id: 'wed', name: 'Qua' }, { id: 'thu', name: 'Qui' },
+        { id: 'fri', name: 'Sex' }
+    ];
+
+    // Gera checkboxes para um container específico
+    const generateCheckboxes = (containerId, scheduleData = []) => {
+        const container = document.getElementById(containerId);
+        container.innerHTML = '';
+        daysOfWeek.forEach(day => {
+            const isChecked = scheduleData.includes(day.id);
+            container.innerHTML += `
+                <label style="margin-right: 10px;">
+                    <input type="checkbox" value="${day.id}" ${isChecked ? 'checked' : ''}>
+                    ${day.name}
+                </label>
+            `;
+        });
+    };
+
+    // Popula os checkboxes com os dados atuais do usuário
+    generateCheckboxes('fixed-days-checkboxes', userData.schedule);
+    generateCheckboxes('variable-days-2-checkboxes', userData.schedule_2_days);
+    generateCheckboxes('variable-days-3-checkboxes', userData.schedule_3_days);
+
+    // Mostra a UI correta (fixa ou variável) e exibe o editor
+    updateScheduleEditorUI();
+    editorDiv.style.display = 'block';
+}
+
+/**
+ * Mostra/oculta os campos de dias da semana com base no tipo de escala selecionado.
+ */
+function updateScheduleEditorUI() {
+    const scheduleType = document.getElementById('schedule-type-select').value;
+    document.getElementById('fixed-schedule-settings').style.display = (scheduleType === 'fixed') ? 'block' : 'none';
+    document.getElementById('variable-schedule-settings').style.display = (scheduleType.includes('_')) ? 'block' : 'none';
+}
+
+/**
+ * Salva as alterações de escala no Firestore.
+ */
+async function handleSaveSchedule() {
+    const login = document.getElementById('schedule-user-select').value;
+    if (!login) {
+        alert("Por favor, escolha um funcionário.");
+        return;
+    }
+
+    const scheduleType = document.getElementById('schedule-type-select').value;
+    const dataToUpdate = { scheduleType };
+
+    // Coleta os dias selecionados dos checkboxes
+    const getSelectedDays = (containerId) => {
+        const checkboxes = document.querySelectorAll(`#${containerId} input:checked`);
+        return Array.from(checkboxes).map(cb => cb.value);
+    };
+
+    if (scheduleType === 'fixed') {
+        dataToUpdate.schedule = getSelectedDays('fixed-days-checkboxes');
+        // Limpa os campos da escala variável para manter os dados consistentes
+        dataToUpdate.schedule_2_days = [];
+        dataToUpdate.schedule_3_days = [];
+    } else {
+        const days2 = getSelectedDays('variable-days-2-checkboxes');
+        const days3 = getSelectedDays('variable-days-3-checkboxes');
+        
+        // Validação simples
+        if (days2.length !== 2 || days3.length !== 3) {
+            alert("Por favor, selecione exatamente 2 dias para a semana de 2 dias e 3 dias para a semana de 3 dias.");
+            return;
+        }
+
+        dataToUpdate.schedule_2_days = days2;
+        dataToUpdate.schedule_3_days = days3;
+        // Limpa o campo da escala fixa
+        dataToUpdate.schedule = [];
+    }
+
+    // Salva no Firestore
+    try {
+        const userRef = db.collection('funcionarios').doc(login);
+        await userRef.update(dataToUpdate);
+
+        alert(`Escala de ${globalUsersData[login].name} salva com sucesso!`);
+        
+        // Recarrega os dados e atualiza a interface
+        await loadGlobalSettings();
+        renderPresenceTable();
+        renderScheduleEditor(); // Recarrega o editor com os dados salvos
+
+    } catch (error) {
+        console.error("Erro ao salvar a escala:", error);
+        alert("Ocorreu um erro ao salvar a escala. Verifique o console.");
+    }
 }
