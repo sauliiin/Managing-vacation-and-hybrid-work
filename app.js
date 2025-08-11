@@ -3,32 +3,38 @@
 // =================================================================
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDM66hHUOkfAP3FrnfcQaF2aRiY_2jhnTM",
-    authDomain: "controle-de-ferias-45d25.firebaseapp.com",
-    projectId: "controle-de-ferias-45d25",
-    storageBucket: "controle-de-ferias-45d25.appspot.com",
-    messagingSenderId: "298345781850",
-    appId: "1:298345781850:web:0d21bb20a7fad821de9663"
+    apiKey: "AIzaSyDM66hHUOkfAP3FrnfcQaF2aRiY_2jhnTM",
+    authDomain: "controle-de-ferias-45d25.firebaseapp.com",
+    projectId: "controle-de-ferias-45d25",
+    storageBucket: "controle-de-ferias-45d25.appspot.com",
+    messagingSenderId: "298345781850",
+    appId: "1:298345781850:web:0d21bb20a7fad821de9663"
 };
 
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 // =================================================================
-// LISTA DE FERIADOS E AVATARES
+// LISTA DE FERIADOS E AVATARES (DADOS INICIAIS)
 // =================================================================
-const holidays = [
-    '2025-08-15', '2025-10-27', '2025-11-15', '2025-11-20', '2025-11-21',
-    '2025-12-08', '2025-12-25', '2025-12-31', '2026-01-01', '2026-01-02',
-    '2026-02-16', '2026-02-17', '2026-04-03', '2026-04-21', '2026-05-01',
-    '2026-06-04', '2026-09-07', '2026-10-12', '2026-11-02', '2026-11-15',
-    '2026-12-25'
+// ⭐ MODIFICADO: Estes são agora os dados INICIAIS para semear o banco.
+// Os dados reais serão carregados do Firestore para as variáveis globais abaixo.
+const initialHolidays = [
+    '2025-08-15', '2025-10-27', '2025-11-15', '2025-11-20', '2025-11-21',
+    '2025-12-08', '2025-12-25', '2025-12-31', '2026-01-01', '2026-01-02',
+    '2026-02-16', '2026-02-17', '2026-04-03', '2026-04-21', '2026-05-01',
+    '2026-06-04', '2026-09-07', '2026-10-12', '2026-11-02', '2026-11-15',
+    '2026-12-25'
 ];
 
-const availableAvatars = [
-    'yoda.png', 'ben.png', 'trump.png', 'lula.png', 'goku.jpg', `capivaraFeliz.jpg`,
-    'Chloe.png', 'pepa.png', 'magali.png', `bozo.jpg`, 'sofor.png', `capivaraMood.jpg`
+const initialAvatars = [
+    'yoda.png', 'ben.png', 'trump.png', 'lula.png', 'goku.jpg', `capivaraFeliz.jpg`,
+    'Chloe.png', 'pepa.png', 'magali.png', `bozo.jpg`, 'sofor.png', `capivaraMood.jpg`
 ];
+
+// ⭐ NOVO: Variáveis globais para armazenar as configurações dinâmicas
+let globalHolidays = [];
+let globalAvatars = [];
 
 const YODA_LOGIN = 'pr1182589';
 
@@ -170,52 +176,71 @@ document.addEventListener('DOMContentLoaded', () => {
     createRouletteModal();
 });
 
-function initializeApp() {
-    const userSelect = document.getElementById('user-select');
-    Object.keys(usersData).forEach(login => {
-        const option = document.createElement('option');
-        option.value = login;
-        option.textContent = usersData[login].name;
-        userSelect.appendChild(option);
-    });
-    userSelect.addEventListener('change', onUserSelect);
-    renderVacationMap();
-    renderPresenceTable();
-    setupNavEventListeners();
-    setupAvatarModalEvents();
-    setupPasswordModalEvents();
+// ⭐ MODIFICADO: Função agora é async para aguardar o carregamento das configurações
+async function initializeApp() {
+    // ⭐ NOVO: Carrega as configurações globais (feriados/avatares) do Firestore
+    await loadGlobalSettings(); 
+
+    // Cria os painéis de admin do Yoda (estarão ocultos por padrão)
+    createYodaAdminPanels();
+
+    const userSelect = document.getElementById('user-select');
+    Object.keys(usersData).forEach(login => {
+        const option = document.createElement('option');
+        option.value = login;
+        option.textContent = usersData[login].name;
+        userSelect.appendChild(option);
+    });
+    userSelect.addEventListener('change', onUserSelect);
+    renderVacationMap();
+    renderPresenceTable();
+    setupNavEventListeners();
+    setupAvatarModalEvents();
+    setupPasswordModalEvents();
 }
+
 
 function onUserSelect() {
-    const selectedLogin = document.getElementById('user-select').value;
-    const appContainer = document.getElementById('app-container');
-    const profileContainer = document.getElementById('profile-picture-container');
+    const selectedLogin = document.getElementById('user-select').value;
+    const appContainer = document.getElementById('app-container');
+    const profileContainer = document.getElementById('profile-picture-container');
+    // ⭐ NOVO: Referência ao painel de administração
+    const yodaAdminPanel = document.getElementById('yoda-admin-panel');
 
-    if (selectedLogin === YODA_LOGIN && currentUserLogin !== YODA_LOGIN) {
-        const passwordModal = document.getElementById('password-modal');
-        const passwordInput = document.getElementById('jedi-password-input');
-        passwordModal.style.display = 'flex';
-        passwordInput.value = '';
-        passwordInput.focus();
-        return;
-    }
+    if (selectedLogin === YODA_LOGIN && currentUserLogin !== YODA_LOGIN) {
+        const passwordModal = document.getElementById('password-modal');
+        const passwordInput = document.getElementById('jedi-password-input');
+        passwordModal.style.display = 'flex';
+        passwordInput.value = '';
+        passwordInput.focus();
+        return;
+    }
 
-    currentUserLogin = selectedLogin;
-
-    if (currentUserLogin) {
-        const userData = usersData[currentUserLogin];
-        document.getElementById('welcome-message').textContent = `Gerenciando dados de: ${userData.name}`;
-        appContainer.style.display = 'block';
-        profileContainer.style.display = 'block';
-        loadUserProfile(currentUserLogin);
-        loadUserVacations();
-        renderHybridCalendar();
+    currentUserLogin = selectedLogin;
+    
+    // ⭐ NOVO: Controla a visibilidade do painel de administração do Yoda
+    if (currentUserLogin === YODA_LOGIN) {
+        yodaAdminPanel.style.display = 'block';
+        renderYodaAdminPanels(); // Renderiza os dados nos painéis
     } else {
-        document.getElementById('welcome-message').textContent = '';
-        appContainer.style.display = 'none';
-        profileContainer.style.display = 'none';
+        yodaAdminPanel.style.display = 'none';
     }
+
+    if (currentUserLogin) {
+        const userData = usersData[currentUserLogin];
+        document.getElementById('welcome-message').textContent = `Gerenciando dados de: ${userData.name}`;
+        appContainer.style.display = 'block';
+        profileContainer.style.display = 'block';
+        loadUserProfile(currentUserLogin);
+        loadUserVacations();
+        renderHybridCalendar();
+    } else {
+        document.getElementById('welcome-message').textContent = '';
+        appContainer.style.display = 'none';
+        profileContainer.style.display = 'none';
+    }
 }
+
 
 function setupPasswordModalEvents() {
     const passwordModal = document.getElementById('password-modal');
@@ -262,21 +287,26 @@ function setupPasswordModalEvents() {
 }
 
 async function loadUserProfile(login) {
-    const profileImg = document.getElementById('profile-img');
-    try {
-        const docRef = db.collection('funcionarios').doc(login);
-        const doc = await docRef.get();
-        let avatarUrl = usersData[login]?.avatar || '';
-        if (doc.exists && doc.data().avatar) {
-            avatarUrl = doc.data().avatar;
-        }
-        profileImg.src = avatarUrl;
-    } catch (error) {
-        console.error("Erro ao carregar perfil do usuário:", error);
-        if (usersData[login]) {
-            profileImg.src = usersData[login].avatar;
-        }
-    }
+    const profileImg = document.getElementById('profile-img');
+    let avatarIdentifier = usersData[login]?.avatar || ''; // Valor padrão local
+
+    try {
+        const docRef = db.collection('funcionarios').doc(login);
+        const doc = await docRef.get();
+        
+        if (doc.exists && doc.data().avatar) {
+            avatarIdentifier = doc.data().avatar; // Pega o valor do banco (pode ser URL)
+        }
+        
+        // Lógica para definir o caminho da imagem
+        const isUrl = avatarIdentifier.startsWith('http');
+        profileImg.src = isUrl ? avatarIdentifier : `img/${avatarIdentifier}`;
+
+    } catch (error) {
+        console.error("Erro ao carregar perfil do usuário:", error);
+        // Fallback em caso de erro
+        profileImg.src = usersData[login]?.avatar || '';
+    }
 }
 
 async function saveAvatar(login, avatarUrl) {
@@ -312,22 +342,36 @@ function setupAvatarModalEvents() {
     });
 }
 
+// 1. Função Auxiliar para determinar o SRC da imagem
+function getAvatarSrc(identifier) {
+    if (!identifier) return ''; // Retorna string vazia se não houver identificador
+
+    // Se começar com 'data:image' (Base64) ou 'http' (URL de internet), é um caminho completo.
+    if (identifier.startsWith('data:image') || identifier.startsWith('http')) {
+        return identifier;
+    }
+    // Senão, é um arquivo local da pasta img/
+    return `img/${identifier}`;
+}
+
+// 2. Substitua a função openAvatarModal
 function openAvatarModal() {
     const modal = document.getElementById('avatar-modal');
     const avatarGrid = document.getElementById('avatar-grid');
     avatarGrid.innerHTML = '';
 
-    availableAvatars.forEach(avatarFile => {
+    globalAvatars.forEach(avatarIdentifier => {
         const img = document.createElement('img');
-        const fullPath = `img/${avatarFile}`;
+        const fullPath = getAvatarSrc(avatarIdentifier); // Usa a função auxiliar
+
         img.src = fullPath;
         img.classList.add('avatar-option');
-        img.alt = avatarFile;
-        img.title = `Selecionar ${avatarFile.split('.')[0]}`;
+        img.alt = "Avatar";
+        img.title = `Selecionar este avatar`;
 
         img.addEventListener('click', async () => {
             document.getElementById('profile-img').src = fullPath;
-            await saveAvatar(currentUserLogin, fullPath);
+            await saveAvatar(currentUserLogin, avatarIdentifier);
             modal.style.display = 'none';
         });
 
@@ -335,6 +379,27 @@ function openAvatarModal() {
     });
 
     modal.style.display = 'flex';
+}
+
+// 3. Substitua a função loadUserProfile
+async function loadUserProfile(login) {
+    const profileImg = document.getElementById('profile-img');
+    let avatarIdentifier = usersData[login]?.avatar || '';
+
+    try {
+        const docRef = db.collection('funcionarios').doc(login);
+        const doc = await docRef.get();
+
+        if (doc.exists && doc.data().avatar) {
+            avatarIdentifier = doc.data().avatar;
+        }
+
+        profileImg.src = getAvatarSrc(avatarIdentifier); // Usa a função auxiliar
+
+    } catch (error) {
+        console.error("Erro ao carregar perfil do usuário:", error);
+        profileImg.src = getAvatarSrc(usersData[login]?.avatar);
+    }
 }
 
 // =================================================================
@@ -361,11 +426,12 @@ function addVacationPeriod(period = { start: '', end: '' }) {
 }
 
 function isBusinessDay(date) {
-    const day = date.getUTCDay();
-    if (day === 0 || day === 6) return false;
-    const dateString = date.toISOString().slice(0, 10);
-    if (holidays.includes(dateString)) return false;
-    return true;
+    const day = date.getUTCDay();
+    if (day === 0 || day === 6) return false;
+    const dateString = date.toISOString().slice(0, 10);
+    // Usa a variável global em vez da constante
+    if (globalHolidays.includes(dateString)) return false; 
+    return true;
 }
 
 function calculateBusinessDays(start, end) {
@@ -1398,6 +1464,272 @@ function spinTheWheel(onSpinEndCallback) {
             }, 20);
         }, 500);
     }, 5000);
+}
+
+// =================================================================
+// ⭐ NOVO: SEÇÃO DE GERENCIAMENTO DO MESTRE YODA
+// =================================================================
+
+/**
+ * Carrega as configurações globais (feriados, avatares) do Firestore.
+ * Se não existirem, cria o documento de configuração com os valores iniciais.
+ */
+async function loadGlobalSettings() {
+    const configRef = db.collection('configuracoes').doc('geral');
+    try {
+        const doc = await configRef.get();
+        if (doc.exists) {
+            console.log("Configurações carregadas do Firestore.");
+            const data = doc.data();
+            globalHolidays = data.holidays || initialHolidays;
+            globalAvatars = data.availableAvatars || initialAvatars;
+        } else {
+            console.log("Nenhuma configuração encontrada. Semeando o banco de dados com valores iniciais.");
+            await configRef.set({
+                holidays: initialHolidays,
+                availableAvatars: initialAvatars
+            });
+            globalHolidays = initialHolidays;
+            globalAvatars = initialAvatars;
+        }
+    } catch (error) {
+        console.error("Erro ao carregar configurações globais:", error);
+        // Fallback para os dados iniciais em caso de erro de leitura
+        globalHolidays = initialHolidays;
+        globalAvatars = initialAvatars;
+    }
+}
+
+/**
+ * Cria a estrutura HTML para os painéis de administração do Yoda.
+ * É chamado uma vez na inicialização do app.
+ */
+// SUBSTITUA A SUA FUNÇÃO INTEIRA POR ESTA
+function createYodaAdminPanels() {
+    const yodaPanelContainer = document.createElement('div');
+    
+    // ⭐ 1. ADICIONA A CLASSE 'card' PARA HERDAR OS ESTILOS PADRÃO (FUNDO BRANCO, ESPAÇAMENTO, ETC.)
+    yodaPanelContainer.classList.add('card');
+
+    // MANTÉM OS ESTILOS ÚNICOS DO YODA E REMOVE OS REDUNDANTES
+    yodaPanelContainer.id = 'yoda-admin-panel';
+    yodaPanelContainer.style.display = 'none'; // Começa oculto
+    yodaPanelContainer.style.border = '2px solid #3cb44b'; // Borda verde especial
+    // As linhas de padding, border-radius e margin foram removidas para usar o padrão da classe 'card'
+
+    yodaPanelContainer.innerHTML = `
+        <h2 style="text-align: center; color: #3cb44b;">Painel do Mestre Jedi</h2>
+        
+        <div id="holiday-manager-container" class="admin-panel-section" style="margin-bottom: 20px;">
+            <h4>Gerenciar Feriados Globais 🗓️</h4>
+            <div id="holiday-list" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
+            <div>
+                <input type="date" id="new-holiday-input">
+                <button id="add-holiday-button">Adicionar Feriado</button>
+            </div>
+        </div>
+        
+        <hr>
+
+        <div id="avatar-manager-container" class="admin-panel-section" style="margin-top: 20px;">
+            <h4>Gerenciar Avatares Disponíveis 🖼️</h4>
+            <div id="avatar-list" style="max-height: 150px; overflow-y: auto; border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;"></div>
+            <div>
+                <input type="file" id="new-avatar-input" accept="image/png, image/jpeg, image/gif">
+                <button id="add-avatar-button">Adicionar Avatar</button>
+            </div>
+        </div>
+    `;
+
+    // Adiciona o painel completo logo após o container do calendário híbrido
+    const hybridCalendarContainer = document.getElementById('hybrid-calendar-container');
+    if (hybridCalendarContainer) {
+        hybridCalendarContainer.parentNode.insertBefore(yodaPanelContainer, hybridCalendarContainer.nextSibling);
+
+        // Adiciona os event listeners para os botões
+        document.getElementById('add-holiday-button').addEventListener('click', handleAddHoliday);
+        document.getElementById('add-avatar-button').addEventListener('click', handleAddAvatar);
+    }
+}
+
+/**
+ * Renderiza/atualiza o conteúdo dos painéis de administração do Yoda com os dados atuais.
+ */
+function renderYodaAdminPanels() {
+    // Renderiza a lista de feriados
+    const holidayListDiv = document.getElementById('holiday-list');
+    holidayListDiv.innerHTML = '';
+    globalHolidays.sort().forEach(holiday => {
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.marginBottom = '5px';
+        item.innerHTML = `
+            <span>${formatDate(holiday)}</span>
+            <button class="remove-btn" data-holiday="${holiday}">❌</button>
+        `;
+        holidayListDiv.appendChild(item);
+    });
+    
+    // Adiciona evento de clique para os botões de remover feriado
+    holidayListDiv.querySelectorAll('.remove-btn').forEach(button => {
+        button.addEventListener('click', (e) => handleRemoveHoliday(e.currentTarget.dataset.holiday));
+    });
+
+    // Renderiza a lista de avatares
+    const avatarListDiv = document.getElementById('avatar-list');
+    avatarListDiv.innerHTML = '';
+    globalAvatars.sort().forEach(avatar => {
+        const item = document.createElement('div');
+        item.style.display = 'flex';
+        item.style.justifyContent = 'space-between';
+        item.style.marginBottom = '5px';
+        item.innerHTML = `
+            <span>${avatar}</span>
+            <button class="remove-btn" data-avatar="${avatar}">❌</button>
+        `;
+        avatarListDiv.appendChild(item);
+    });
+    
+    // Adiciona evento de clique para os botões de remover avatar
+    avatarListDiv.querySelectorAll('.remove-btn').forEach(button => {
+        button.addEventListener('click', (e) => handleRemoveAvatar(e.currentTarget.dataset.avatar));
+    });
+}
+
+/**
+ * Lida com a adição de um novo feriado.
+ */
+async function handleAddHoliday() {
+    const input = document.getElementById('new-holiday-input');
+    const newHoliday = input.value;
+    if (!newHoliday) {
+        alert("Por favor, selecione uma data para o feriado.");
+        return;
+    }
+    if (globalHolidays.includes(newHoliday)) {
+        alert("Este feriado já existe na lista.");
+        return;
+    }
+
+    try {
+        const configRef = db.collection('configuracoes').doc('geral');
+        await configRef.update({
+            holidays: firebase.firestore.FieldValue.arrayUnion(newHoliday)
+        });
+        alert("Feriado adicionado com sucesso!");
+        input.value = '';
+        await loadGlobalSettings(); // Recarrega os dados do banco
+        renderYodaAdminPanels(); // Re-renderiza o painel do Yoda
+        renderHybridCalendar(); // Re-renderiza calendários para refletir a mudança
+        renderPresenceTable();
+    } catch (error) {
+        console.error("Erro ao adicionar feriado:", error);
+        alert("Falha ao adicionar o feriado. Tente novamente.");
+    }
+}
+
+/**
+ * Lida com a remoção de um feriado.
+ */
+async function handleRemoveHoliday(holidayToRemove) {
+    if (!confirm(`Tem certeza que deseja remover o feriado ${formatDate(holidayToRemove)}?`)) return;
+
+    try {
+        const configRef = db.collection('configuracoes').doc('geral');
+        await configRef.update({
+            holidays: firebase.firestore.FieldValue.arrayRemove(holidayToRemove)
+        });
+        alert("Feriado removido com sucesso!");
+        await loadGlobalSettings(); // Recarrega os dados do banco
+        renderYodaAdminPanels(); // Re-renderiza o painel do Yoda
+        renderHybridCalendar(); // Re-renderiza calendários para refletir a mudança
+        renderPresenceTable();
+    } catch (error) {
+        console.error("Erro ao remover feriado:", error);
+        alert("Falha ao remover o feriado. Tente novamente.");
+    }
+}
+
+/**
+ * Lida com a adição de um novo avatar.
+ */
+async function handleAddAvatar() {
+    const input = document.getElementById('new-avatar-input');
+    const button = document.getElementById('add-avatar-button');
+    const file = input.files[0]; // Pega o arquivo selecionado
+
+    if (!file) {
+        alert("Por favor, escolha um arquivo de imagem.");
+        return;
+    }
+
+    // VERIFICAÇÃO DE TAMANHO CRÍTICA PARA NÃO ESTOURAR O LIMITE DO FIRESTORE
+    if (file.size > 700 * 1024) { // Limite de 700 KB
+        alert("Erro: A imagem é muito grande! Por favor, escolha uma imagem com menos de 700 KB.");
+        input.value = ''; // Limpa a seleção
+        return;
+    }
+
+    button.disabled = true;
+    button.textContent = 'Processando...';
+
+    // Usa a API FileReader para converter a imagem em texto Base64
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+
+    // Quando a conversão terminar...
+    reader.onload = async () => {
+        try {
+            const base64String = reader.result; // O texto gigante que representa a imagem
+
+            // Salva a string Base64 no array de avatares no Firestore
+            const configRef = db.collection('configuracoes').doc('geral');
+            await configRef.update({
+                availableAvatars: firebase.firestore.FieldValue.arrayUnion(base64String)
+            });
+
+            alert("Avatar adicionado com sucesso!");
+            await loadGlobalSettings(); // Recarrega os dados globais
+            renderYodaAdminPanels();  // Re-renderiza o painel do admin
+
+        } catch (error) {
+            console.error("Erro ao adicionar avatar Base64:", error);
+            alert("Falha ao adicionar o avatar. Ocorreu um erro ao salvar no banco de dados.");
+        } finally {
+            // Limpa o input e reabilita o botão
+            input.value = '';
+            button.disabled = false;
+            button.textContent = 'Adicionar Avatar';
+        }
+    };
+
+    // Em caso de erro na leitura do arquivo
+    reader.onerror = () => {
+        alert("Ocorreu um erro ao ler o arquivo de imagem.");
+        button.disabled = false;
+        button.textContent = 'Adicionar Avatar';
+    };
+}
+
+/**
+ * Lida com a remoção de um avatar.
+ */
+async function handleRemoveAvatar(avatarToRemove) {
+    if (!confirm(`Tem certeza que deseja remover o avatar "${avatarToRemove}"?`)) return;
+
+    try {
+        const configRef = db.collection('configuracoes').doc('geral');
+        await configRef.update({
+            availableAvatars: firebase.firestore.FieldValue.arrayRemove(avatarToRemove)
+        });
+        alert("Avatar removido com sucesso!");
+        await loadGlobalSettings(); // Recarrega os dados do banco
+        renderYodaAdminPanels(); // Re-renderiza o painel do Yoda
+    } catch (error) {
+        console.error("Erro ao remover avatar:", error);
+        alert("Falha ao remover o avatar. Tente novamente.");
+    }
 }
 
 // =================================================================
