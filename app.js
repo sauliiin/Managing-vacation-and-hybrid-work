@@ -562,13 +562,17 @@ async function checkVacationConflicts(userPeriods) {
 async function refreshSubstitutionData() {
     substitutionsNeeded = [];
     allDbData = {};
-    const querySnapshot = await db.collection('funcionarios').get();
     const dayMap = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5 };
 
+    // PASSO 1: Carrega todos os funcionários (como antes)
+    const querySnapshot = await db.collection('funcionarios').get();
     querySnapshot.forEach(doc => {
         allDbData[doc.id] = doc.data();
-        const docData = doc.data();
-        const userLogin = doc.id;
+    });
+
+    // PASSO 2: Processa as FÉRIAS para gerar substituições (como antes)
+    Object.keys(allDbData).forEach(userLogin => {
+        const docData = allDbData[userLogin];
         const localUserData = globalUsersData[userLogin];
 
         if (localUserData && docData.vacationPeriods) {
@@ -585,6 +589,7 @@ async function refreshSubstitutionData() {
                                 employeeId: userLogin,
                                 employeeName: docData.name,
                                 substituteId: null,
+                                isManual: false // Marcador para diferenciar de ausência manual
                             });
                         }
                         currentDate.setUTCDate(currentDate.getUTCDate() + 1);
@@ -593,6 +598,33 @@ async function refreshSubstitutionData() {
             });
         }
     });
+
+    // ⭐ NOVO TRECHO: Processa as SUBSTITUIÇÕES MANUAIS do painel do Yoda
+    try {
+        const manualSubsSnapshot = await db.collection('substituicoesManuais').get();
+        manualSubsSnapshot.forEach(doc => {
+            const data = doc.data();
+            // Evita adicionar duplicado se por algum motivo a data já estiver na lista de férias
+            const alreadyExists = substitutionsNeeded.some(sub => 
+                sub.employeeId === data.employeeId && 
+                sub.date.toISOString().slice(0, 10) === data.date
+            );
+
+            if (!alreadyExists) {
+                substitutionsNeeded.push({
+                    date: new Date(data.date + 'T12:00:00Z'),
+                    employeeId: data.employeeId,
+                    employeeName: data.employeeName,
+                    substituteId: null,
+                    isManual: true // Marcador especial para o item manual
+                });
+            }
+        });
+    } catch (error) {
+        console.error("Erro ao carregar substituições manuais:", error);
+    }
+    
+    // Ordena a lista final
     substitutionsNeeded.sort((a, b) => a.date - b.date);
 }
 
@@ -688,25 +720,32 @@ function renderAlertsAndResultsUI() {
         // Ordena as substituições por data para uma exibição lógica
         substitutionsNeeded.sort((a, b) => a.date - b.date);
 
-        // Itera por TODAS as substituições necessárias, não apenas as pendentes
+        // Itera por TODAS as substituições necessárias
         substitutionsNeeded.forEach(sub => {
             const p = document.createElement('p');
             p.style.fontWeight = '500'; // Deixa o texto um pouco mais forte
 
-            // ⭐ LÓGICA PRINCIPAL DA MUDANÇA ⭐
-            // Verifica se um substituto JÁ FOI atribuído e salvo para esta data
-            if (sub.substituteId) {
-                // Se sim, busca o nome do substituto
-                const substituteName = globalUsersData[sub.substituteId]?.name || 'Substituto Desconhecido';
+            const substituteName = (sub.substituteId && globalUsersData[sub.substituteId]?.name) 
+                                   ? ` - <strong>${globalUsersData[sub.substituteId].name}</strong> ✅`
+                                   : '';
+            
+            const baseText = `${formatDate(sub.date)} (${sub.employeeName})`;
 
-                // Formata a string conforme solicitado, com o nome do substituto e o emoji
-                p.innerHTML = `${formatDate(sub.date)} (${sub.employeeName}) - <strong>${substituteName}</strong> ✅`;
-                p.style.color = '#198754'; // Verde para indicar sucesso/resolvido
+            // ⭐ LÓGICA PRINCIPAL DA MUDANÇA ⭐
+            if (sub.isManual) {
+                // Se for manual, será SEMPRE AZUL, com ou sem substituto.
+                p.innerHTML = baseText + substituteName;
+                p.style.color = '#0d6efd'; // Azul
+            } else if (sub.substituteId) {
+                // Se for de FÉRIAS e TIVER substituto, fica VERDE.
+                p.innerHTML = baseText + substituteName;
+                p.style.color = '#198754'; // Verde
             } else {
-                // Se não houver substituto, exibe como pendente
-                p.textContent = `${formatDate(sub.date)} (${sub.employeeName})`;
-                p.style.color = '#dc3545'; // Vermelho para indicar pendência
+                // Se for de FÉRIAS e NÃO TIVER substituto, fica VERMELHO.
+                p.innerHTML = baseText; // Não mostra emoji aqui
+                p.style.color = '#dc3545'; // Vermelho
             }
+            
             alertContainerDiv.appendChild(p);
         });
 
@@ -1586,6 +1625,22 @@ function createYodaAdminPanels() {
         
         <hr>
 
+        <div id="manual-substitution-container" class="admin-panel-section">
+          <h4>Adicionar Substituição Manual 🔵</h4>
+          <p style="font-size: 0.9em; color: #666;">Use esta opção para ausências que não são férias (ex: licença médica, etc.).</p>
+          <div>
+              <label for="manual-sub-date">Data:</label>
+              <input type="date" id="manual-sub-date" style="margin-right: 10px;">
+              
+              <label for="manual-sub-secretary">Secretário(a):</label>
+              <select id="manual-sub-secretary" style="margin-right: 10px;">
+                  <option value="">-- Escolha --</option>
+              </select>
+              
+              <button id="add-manual-sub-button">Adicionar Alerta</button>
+          </div>
+        </div>
+
         <div id="user-manager-container" class="admin-panel-section">
             <h4>Gerenciar Funcionários 🧑‍🤝‍🧑</h4>
             <div id="user-list" style="${listStyle}"></div>
@@ -1664,6 +1719,7 @@ function createYodaAdminPanels() {
         document.getElementById('schedule-user-select').addEventListener('change', renderScheduleEditor);
         document.getElementById('schedule-type-select').addEventListener('change', updateScheduleEditorUI);
         document.getElementById('save-schedule-button').addEventListener('click', handleSaveSchedule);
+        document.getElementById('add-manual-sub-button').addEventListener('click', handleAddManualSubstitution);
     }
 }
 
@@ -1766,6 +1822,22 @@ function renderYodaAdminPanels() {
     if (!scheduleUserSelect.value) {
         document.getElementById('schedule-editor').style.display = 'none';
     }
+    // ⭐ NOVO TRECHO PARA POPULAR O SELETOR DE SUBSTITUIÇÃO MANUAL ⭐
+    const manualSubSelect = document.getElementById('manual-sub-secretary');
+    const prevSelectedSub = manualSubSelect.value;
+    manualSubSelect.innerHTML = '<option value="">-- Escolha --</option>';
+
+    Object.keys(globalUsersData)
+        .filter(login => globalUsersData[login].role === 'Secretário')
+        .sort((a, b) => globalUsersData[a].name.localeCompare(globalUsersData[b].name))
+        .forEach(login => {
+            const user = globalUsersData[login];
+            const option = document.createElement('option');
+            option.value = login;
+            option.textContent = user.name;
+            manualSubSelect.appendChild(option);
+        });
+    manualSubSelect.value = prevSelectedSub;
 }
 
 /**
@@ -2282,5 +2354,55 @@ async function handleSaveSchedule() {
     } catch (error) {
         console.error("Erro ao salvar a escala:", error);
         alert("Ocorreu um erro ao salvar a escala. Verifique o console.");
+    }
+}
+
+/**
+ * ⭐ NOVA FUNÇÃO: Lida com a adição de uma substituição manual pelo Mestre Yoda.
+ * Salva um registro na nova coleção 'substituicoesManuais'.
+ */
+async function handleAddManualSubstitution() {
+    const dateInput = document.getElementById('manual-sub-date');
+    const secretarySelect = document.getElementById('manual-sub-secretary');
+    const button = document.getElementById('add-manual-sub-button');
+
+    const date = dateInput.value;
+    const secretaryId = secretarySelect.value;
+
+    if (!date || !secretaryId) {
+        alert("Por favor, preencha a data e escolha um(a) secretário(a).");
+        return;
+    }
+
+    const secretaryName = globalUsersData[secretaryId]?.name || 'Nome Desconhecido';
+    const docId = `${secretaryId}_${date}`; // Cria um ID único para evitar duplicatas
+
+    button.disabled = true;
+    button.textContent = 'Salvando...';
+
+    try {
+        const subRef = db.collection('substituicoesManuais').doc(docId);
+        await subRef.set({
+            date: date,
+            employeeId: secretaryId,
+            employeeName: secretaryName,
+            createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+
+        alert(`Alerta de substituição para ${secretaryName} em ${formatDate(date)} adicionado com sucesso!`);
+        
+        // Limpa os campos
+        dateInput.value = '';
+        secretarySelect.value = '';
+
+        // Recarrega o mapa de férias para exibir o novo alerta azul
+        await renderVacationMap();
+
+    } catch (error) {
+        console.error("Erro ao adicionar substituição manual:", error);
+        alert("Ocorreu um erro ao salvar o alerta. Verifique o console.");
+    } finally {
+        button.disabled = false;
+        button.textContent = 'Adicionar Alerta';
     }
 }
