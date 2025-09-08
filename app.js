@@ -63,16 +63,6 @@ const initialUsersData = {
         color: '#ffe119',
         avatar: 'img/pepa.png'
     },
-    'prps019624': {
-        name: 'Mestre Gabe, o melhor!',
-        displayLetter: 'MG',
-        role: 'Administrativo',
-        scheduleType: '2_3',
-        schedule_2_days: ['wed', 'fri'],
-        schedule_3_days: ['mon', 'wed', 'fri'],
-        color: '#0f0fc0ff',
-        avatar: 'img/sofor.png'
-    },
     'pr115627': {
         name: 'Pedrin do coração',
         displayLetter: 'P',
