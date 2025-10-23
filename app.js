@@ -82,13 +82,23 @@ const initialUsersData = {
         color: '#bfef45',
         avatar: 'img/goku.jpg'
     },
-
+        'pres00325590': {
+        name: 'Fernanda Soares',
+        displayLetter: 'Fe²',
+        role: 'Administrativo',
+        scheduleType: '3_2',
+        schedule_2_days: ['mon', 'fri'],
+        schedule_3_days: ['mon', 'thu', 'fri'],
+        color: '#ff00eaff',
+        avatar: 'img/Chloe.png',
+        meetingDay: 'tue'
+    },
     // ================== SECRETÁRIOS ==================
     'pr101546': {
         name: 'Fernanda',
         displayLetter: 'Fe',
         role: 'Secretário',
-        scheduleType: '2_3',
+        scheduleType: '3_2',
         schedule_2_days: ['tue', 'thu'],
         schedule_3_days: ['mon', 'tue', 'thu'],
         color: '#4363d8',
