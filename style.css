@@ -517,54 +517,161 @@ main {
 #presence-table { 
     width: 100%; 
     border-collapse: separate; 
-    border-spacing: 0;
+    border-spacing: 8px; /* Espaçamento como no calendário */
     text-align: center; 
-    border-radius: var(--radius-md);
-    overflow: hidden;
-    border: 1px solid var(--border-color);
     margin-top: 15px;
 }
 
 #presence-table th, #presence-table td { 
-    border-bottom: 1px solid var(--border-color); 
-    border-right: 1px solid var(--border-color); 
-    padding: 18px 15px; 
+    padding: 12px 10px; 
     font-size: 0.95rem;
+    border-radius: var(--radius-md); /* Bordas arredondadas individuais */
 }
 
-#presence-table th:last-child, #presence-table td:last-child {
-    border-right: none;
+/* Novo visual de cards (inspirado no calendário) para o corpo da tabela */
+#presence-table tbody td {
+    background-color: var(--secondary-bg);
+    border: 1px solid var(--border-color);
+    transition: all var(--transition-fast);
 }
 
-#presence-table tbody tr:last-child td {
-    border-bottom: none;
+#presence-table tbody td:hover {
+    background-color: #ffffff;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-md);
+    border-color: var(--primary-color);
+}
+
+#presence-table th:not(:first-child), #presence-table td:not(:first-child) {
+    width: 80px;
 }
 
 #presence-table thead th { 
-    background-color: var(--secondary-bg); 
-    font-weight: 600;
+    background-color: transparent; 
+    border: none;
+    font-weight: 700;
+    font-size: 0.85rem;
     color: var(--text-muted);
-    font-size: 0.9rem;
     text-transform: uppercase;
-    letter-spacing: 0.025em;
+    letter-spacing: 0.05em;
 }
 
-#presence-table tbody tr {
-    transition: background-color var(--transition-fast);
-}
-
-#presence-table tbody tr:hover {
-    background-color: var(--secondary-bg);
-}
-
+/* Efeito de hover geral para o "X" quando marcado */
 #presence-table .present { 
     font-weight: 800; 
-    font-size: 1.25rem; 
-    color: var(--primary-color); 
+    font-size: 1.35rem; 
+}
+#presence-table .present:hover {
+    transform: translateY(-2px);
+}
+
+/* ========================================================= */
+/* CORES E EFEITOS NEON POR COLUNA (Dia da Semana)           */
+/* ========================================================= */
+
+/* ====== SEGUNDA (Rosa) ====== */
+#presence-table thead th:nth-child(2) { color: #db2777; }
+#presence-table tbody td:nth-child(2) { background-color: #fff1f2; border-color: #ffe4e6; }
+#presence-table tbody td:nth-child(2):hover { background-color: #ffe4e6; border-color: #f472b6; }
+#presence-table td:nth-child(2).present {
+    color: #f472b6 !important; background-color: #fff1f2 !important; border-color: #f472b6 !important;
+    box-shadow: 0 0 12px rgba(244, 114, 182, 0.4) !important; text-shadow: 0 0 8px rgba(244, 114, 182, 0.6);
+}
+#presence-table td:nth-child(2).present:hover {
+    box-shadow: 0 0 18px rgba(244, 114, 182, 0.6) !important; background-color: #ffe4e6 !important;
+}
+
+/* ====== TERÇA (Laranja) ====== */
+#presence-table thead th:nth-child(3) { color: #ea580c; }
+#presence-table tbody td:nth-child(3) { background-color: #fff7ed; border-color: #ffedd5; }
+#presence-table tbody td:nth-child(3):hover { background-color: #ffedd5; border-color: #fb923c; }
+#presence-table td:nth-child(3).present {
+    color: #fb923c !important; background-color: #fff7ed !important; border-color: #fb923c !important;
+    box-shadow: 0 0 12px rgba(251, 146, 60, 0.4) !important; text-shadow: 0 0 8px rgba(251, 146, 60, 0.6);
+}
+#presence-table td:nth-child(3).present:hover {
+    box-shadow: 0 0 18px rgba(251, 146, 60, 0.6) !important; background-color: #ffedd5 !important;
+}
+
+/* ====== QUARTA (Verde) ====== */
+#presence-table thead th:nth-child(4) { color: #16a34a; }
+#presence-table tbody td:nth-child(4) { background-color: #f0fdf4; border-color: #dcfce7; }
+#presence-table tbody td:nth-child(4):hover { background-color: #dcfce7; border-color: #4ade80; }
+#presence-table td:nth-child(4).present {
+    color: #4ade80 !important; background-color: #f0fdf4 !important; border-color: #4ade80 !important;
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.4) !important; text-shadow: 0 0 8px rgba(74, 222, 128, 0.6);
+}
+#presence-table td:nth-child(4).present:hover {
+    box-shadow: 0 0 18px rgba(74, 222, 128, 0.6) !important; background-color: #dcfce7 !important;
+}
+
+/* ====== QUINTA (Ciano/Azul claro) ====== */
+#presence-table thead th:nth-child(5) { color: #0891b2; }
+#presence-table tbody td:nth-child(5) { background-color: #f0fcff; border-color: #ccfbf1; }
+#presence-table tbody td:nth-child(5):hover { background-color: #e0faff; border-color: #00e5ff; }
+#presence-table td:nth-child(5).present {
+    color: #00e5ff !important; background-color: #f0fcff !important; border-color: #00e5ff !important;
+    box-shadow: 0 0 12px rgba(0, 229, 255, 0.4) !important; text-shadow: 0 0 8px rgba(0, 229, 255, 0.6);
+}
+#presence-table td:nth-child(5).present:hover {
+    box-shadow: 0 0 18px rgba(0, 229, 255, 0.6) !important; background-color: #e0faff !important;
+}
+
+/* ====== SEXTA (Roxo) ====== */
+#presence-table thead th:nth-child(6) { color: #7c3aed; }
+#presence-table tbody td:nth-child(6) { background-color: #faf5ff; border-color: #f3e8ff; }
+#presence-table tbody td:nth-child(6):hover { background-color: #f3e8ff; border-color: #a78bfa; }
+#presence-table td:nth-child(6).present {
+    color: #a78bfa !important; background-color: #faf5ff !important; border-color: #a78bfa !important;
+    box-shadow: 0 0 12px rgba(167, 139, 250, 0.4) !important; text-shadow: 0 0 8px rgba(167, 139, 250, 0.6);
+}
+#presence-table td:nth-child(6).present:hover {
+    box-shadow: 0 0 18px rgba(167, 139, 250, 0.6) !important; background-color: #f3e8ff !important;
 }
 
 #presence-table .non-business-day-cell { 
     background-color: var(--light-pink) !important; 
+    border-color: #fce7f3 !important;
+}
+
+/* ========================================================= */
+/* EFEITO DE FOTO AO PASSAR O MOUSE NO 'X'                   */
+/* ========================================================= */
+#presence-table td.present {
+    position: relative; 
+}
+
+.presence-x {
+    display: inline-block;
+    transition: opacity 0.2s ease;
+}
+
+.presence-hover-img {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    object-fit: cover;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    border: 3px solid #ffffff; /* Borda branca para destacar da célula neon */
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transition: all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    z-index: 10;
+}
+
+#presence-table td.present:hover .presence-hover-img {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, -50%) scale(1);
+}
+
+#presence-table td.present:hover .presence-x {
+    opacity: 0; /* Esconde o X suavemente */
 }
 
 

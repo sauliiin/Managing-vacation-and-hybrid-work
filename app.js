@@ -1954,8 +1954,30 @@ function renderPresenceTable() {
             const onVacation = isEmployeeOnVacation(login, utcDate); // Verifica se está de férias
 
             if (isPresent && !onVacation) { // Só marca "X" se for dia presencial E NÃO for férias
-                td.textContent = 'X';
+                const profileMap = {
+                    'Mestre Yoda': 'mestre.png',
+                    'Bibi Perigosa': 'Faby.png',
+                    'Pedrin do coração': 'Pedrin.png',
+                    'Samuquinha': 'Samuquinha.png',
+                    'Fernanda Soares': 'FernandaSoares.png',
+                    'Fernanda': 'Fernanda.png',
+                    'Gabi': 'Gaby.png',
+                    'Gigi': 'Giovanna.png',
+                    'Marcelle': 'Marcelle.png',
+                    'Shirlike': 'Shirley.png',
+                    'Tatyellen': 'Tatyellen.png'
+                };
+                const profilePicFile = profileMap[user.name];
+                
                 td.classList.add('present');
+                if (profilePicFile) {
+                    td.innerHTML = `
+                        <span class="presence-x">X</span>
+                        <img src="img/profiles/${profilePicFile}" class="presence-hover-img" alt="Foto de ${user.name}">
+                    `;
+                } else {
+                    td.innerHTML = `<span class="presence-x">X</span>`;
+                }
             }
             if (!isBusinessDay(utcDate)) {
                 td.classList.add('non-business-day-cell');
