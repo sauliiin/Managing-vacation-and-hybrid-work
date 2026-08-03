@@ -634,11 +634,24 @@ async function renderVacationMap() {
 
     await refreshSubstitutionData();
 
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     const allVacationsForDisplay = [];
     Object.values(allDbData).forEach(docData => {
         if (docData.vacationPeriods) {
             docData.vacationPeriods.forEach(period => {
                 if (period.start && period.end) {
+                    const endDate = new Date(period.end + 'T12:00:00Z');
+                    
+                    if (currentUserLogin !== YODA_LOGIN) {
+                        const vacationEndDay = new Date(endDate);
+                        vacationEndDay.setHours(0, 0, 0, 0);
+                        if (vacationEndDay < today) {
+                            return; // Hide past vacations for non-admins
+                        }
+                    }
+
                     allVacationsForDisplay.push({
                         date: new Date(period.start + 'T12:00:00Z'),
                         text: `${docData.name || 'Nome não encontrado'}: ${formatDate(period.start)} a ${formatDate(period.end)}`
@@ -710,18 +723,30 @@ function renderAlertsAndResultsUI() {
     const alertContainerDiv = document.getElementById('vacation-alert-container');
     alertContainerDiv.innerHTML = ''; // Limpa o conteúdo anterior
 
+    let subsToShow = substitutionsNeeded;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (currentUserLogin !== YODA_LOGIN) {
+        subsToShow = substitutionsNeeded.filter(sub => {
+            const subDate = new Date(sub.date);
+            subDate.setHours(0, 0, 0, 0);
+            return subDate >= today;
+        });
+    }
+
     // Verifica se há alguma necessidade de substituição
-    if (substitutionsNeeded.length > 0) {
+    if (subsToShow.length > 0) {
         const alertTitle = document.createElement('h4');
         alertTitle.style.color = '#dc3545'; // Vermelho para chamar atenção
         alertTitle.textContent = 'ALERTA! Necessário substituição nas datas:';
         alertContainerDiv.appendChild(alertTitle);
 
         // Ordena as substituições por data para uma exibição lógica
-        substitutionsNeeded.sort((a, b) => a.date - b.date);
+        subsToShow.sort((a, b) => a.date - b.date);
 
         // Itera por TODAS as substituições necessárias
-        substitutionsNeeded.forEach(sub => {
+        subsToShow.forEach(sub => {
             const p = document.createElement('p');
             p.style.fontWeight = '500'; // Deixa o texto um pouco mais forte
 
@@ -960,14 +985,26 @@ function renderSubstitutionResults() {
     const resultsDiv = document.getElementById('global-roulette-results');
     resultsDiv.innerHTML = `<h4>Resultado da Roleta Maluca:</h4>`;
 
-    if (substitutionsNeeded.length === 0) {
+    let subsToShow = substitutionsNeeded;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (currentUserLogin !== YODA_LOGIN) {
+        subsToShow = substitutionsNeeded.filter(sub => {
+            const subDate = new Date(sub.date);
+            subDate.setHours(0, 0, 0, 0);
+            return subDate >= today;
+        });
+    }
+
+    if (subsToShow.length === 0) {
         resultsDiv.innerHTML += `<p>Nenhuma substituição foi necessária.</p>`;
         return;
     }
 
-    substitutionsNeeded.sort((a, b) => a.date - b.date);
+    subsToShow.sort((a, b) => a.date - b.date);
 
-    substitutionsNeeded.forEach(sub => {
+    subsToShow.forEach(sub => {
         const resultLine = document.createElement('div');
         resultLine.className = 'substitution-result-line';
         const label = document.createElement('span');
