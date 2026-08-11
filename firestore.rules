@@ -1,0 +1,36 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // O front-end atual precisa consultar a equipe inteira para montar os
+    // calendários, detectar conflitos e distribuir substituições.
+    match /funcionarios/{login} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    match /configuracoes/{document} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    match /substituicoes/{document} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    match /substituicoesManuais/{document} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    match /estado_roleta/{document} {
+      allow read, create, update, delete: if signedIn();
+    }
+
+    // Qualquer coleção não usada pelo aplicativo permanece bloqueada.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

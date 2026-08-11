@@ -1,0 +1,91 @@
+[debug] [2026-08-11T17:05:17.744Z] ----------------------------------------------------------------------
+[debug] [2026-08-11T17:05:17.745Z] Command:       /usr/bin/node /home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/.bin/firebase projects:list --json
+[debug] [2026-08-11T17:05:17.745Z] CLI Version:   15.26.0
+[debug] [2026-08-11T17:05:17.745Z] Platform:      linux
+[debug] [2026-08-11T17:05:17.745Z] Node Version:  v26.4.0
+[debug] [2026-08-11T17:05:17.746Z] Detected Agent: codex_cli
+[debug] [2026-08-11T17:05:17.746Z] Time:          Tue Aug 11 2026 14:05:17 GMT-0300 (Brasilia Standard Time)
+[debug] [2026-08-11T17:05:17.746Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-08-11T17:05:17.754Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-08-11T17:05:17.911Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] [2026-08-11T17:05:17.925Z] Error: Could not load the default credentials. Browse to https://cloud.google.com/docs/authentication/getting-started for more information.
+    at GoogleAuth.getApplicationDefaultAsync (/home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/google-auth-library/build/src/auth/googleauth.js:287:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:104:5)
+    at async GoogleAuth._GoogleAuth_determineClient (/home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/google-auth-library/build/src/auth/googleauth.js:834:32)
+    at async GoogleAuth.getClient (/home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/google-auth-library/build/src/auth/googleauth.js:698:20)
+    at async GoogleAuth.getAccessToken (/home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/google-auth-library/build/src/auth/googleauth.js:722:24)
+    at async autoAuth (/home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/firebase-tools/lib/requireAuth.js:38:19)
+    at async Object.requireAuth [as fn] (/home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/firebase-tools/lib/requireAuth.js:100:20)
+    at async /home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/firebase-tools/lib/command.js:278:17
+[error] 
+[error] Error: Failed to authenticate, have you run firebase login?
+[debug] [2026-08-11T17:05:24.976Z] ----------------------------------------------------------------------
+[debug] [2026-08-11T17:05:24.982Z] Command:       /usr/bin/node /home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/.bin/firebase emulators:exec --only firestore node --check app.js
+[debug] [2026-08-11T17:05:24.984Z] CLI Version:   15.26.0
+[debug] [2026-08-11T17:05:24.984Z] Platform:      linux
+[debug] [2026-08-11T17:05:24.985Z] Node Version:  v26.4.0
+[debug] [2026-08-11T17:05:24.987Z] Detected Agent: codex_cli
+[debug] [2026-08-11T17:05:24.989Z] Time:          Tue Aug 11 2026 14:05:24 GMT-0300 (Brasilia Standard Time)
+[debug] [2026-08-11T17:05:24.991Z] ----------------------------------------------------------------------
+[debug] 
+[debug] [2026-08-11T17:05:25.032Z] >>> [apiv2][query] GET https://firebase-public.firebaseio.com/cli.json [none]
+[debug] [2026-08-11T17:05:28.239Z] > command requires scopes: ["email","openid","https://www.googleapis.com/auth/cloudplatformprojects.readonly","https://www.googleapis.com/auth/firebase","https://www.googleapis.com/auth/cloud-platform"]
+[debug] Failed to authenticate, have you run firebase login?
+[warn] ⚠  emulators: You are not currently authenticated so some features may not work correctly. Please run firebase login to authenticate the CLI. 
+[debug] [2026-08-11T17:05:28.382Z] openjdk version "21.0.12" 2026-07-21
+OpenJDK Runtime Environment (build 21.0.12+8)
+OpenJDK 64-Bit Server VM (build 21.0.12+8, mixed mode, sharing)
+
+[debug] [2026-08-11T17:05:28.389Z] Parsed Java major version: 21
+[info] i  emulators: Starting emulators: firestore {"metadata":{"emulator":{"name":"hub"},"message":"Starting emulators: firestore"}}
+[debug] [2026-08-11T17:05:28.403Z] [logging] Logging Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-08-11T17:05:28.404Z] [firestore] Firestore Emulator only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-08-11T17:05:28.405Z] [firestore.websocket] websocket server for firestore only supports listening on one address (127.0.0.1). Not listening on ::1
+[debug] [2026-08-11T17:05:28.407Z] assigned listening specs for emulators {"user":{"hub":[{"address":"127.0.0.1","family":"IPv4","port":4400},{"address":"::1","family":"IPv6","port":4400}],"logging":[{"address":"127.0.0.1","family":"IPv4","port":4500}],"firestore":[{"address":"127.0.0.1","family":"IPv4","port":8080}],"firestore.websocket":[{"address":"127.0.0.1","family":"IPv4","port":9150}]},"metadata":{"message":"assigned listening specs for emulators"}}
+[debug] [2026-08-11T17:05:28.420Z] Write emulator hub locator at /tmp/hub-controle-de-ferias-45d25.json
+[info] i  firestore: downloading cloud-firestore-emulator-v1.22.0.jar... {"metadata":{"emulator":{"name":"firestore"},"message":"downloading cloud-firestore-emulator-v1.22.0.jar..."}}
+[debug] [2026-08-11T17:05:28.443Z] >>> [apiv2][query] GET https://storage.googleapis.com/firebase-preview-drop/emulator/cloud-firestore-emulator-v1.22.0.jar 
+[debug] [2026-08-11T17:05:28.853Z] <<< [apiv2][status] GET https://firebase-public.firebaseio.com/cli.json 200
+[debug] [2026-08-11T17:05:28.853Z] <<< [apiv2][body] GET https://firebase-public.firebaseio.com/cli.json {"cloudBuildErrorAfter":1594252800000,"cloudBuildWarnAfter":1590019200000,"defaultNode10After":1594252800000,"minVersion":"3.0.5","node8DeploysDisabledAfter":1613390400000,"node8RuntimeDisabledAfter":1615809600000,"node8WarnAfter":1600128000000}
+[debug] [2026-08-11T17:05:29.016Z] <<< [apiv2][status] GET https://storage.googleapis.com/firebase-preview-drop/emulator/cloud-firestore-emulator-v1.22.0.jar 200
+[debug] [2026-08-11T17:05:29.017Z] <<< [apiv2][body] GET https://storage.googleapis.com/firebase-preview-drop/emulator/cloud-firestore-emulator-v1.22.0.jar [stream]
+[debug] [2026-08-11T17:06:12.765Z] Ignoring unsupported arg: auto_download {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: auto_download"}}
+[debug] [2026-08-11T17:06:12.765Z] Ignoring unsupported arg: single_project_mode_error {"metadata":{"emulator":{"name":"firestore"},"message":"Ignoring unsupported arg: single_project_mode_error"}}
+[debug] [2026-08-11T17:06:12.765Z] Starting Firestore Emulator with command {"binary":"java","args":["-Dgoogle.cloud_firestore.debug_log_level=FINE","-Duser.language=en","-jar","/home/mestrey/.cache/firebase/emulators/cloud-firestore-emulator-v1.22.0.jar","--host","127.0.0.1","--port",8080,"--websocket_port",9150,"--database-edition","standard","--project_id","controle-de-ferias-45d25","--rules","/home/mestrey/Documentos/GitHub/Managing-vacation-and-hybrid-work/firestore.rules","--single_project_mode",true],"optionalArgs":["port","webchannel_port","host","rules","websocket_port","database-edition","functions_emulator","seed_from_export","project_id","single_project_mode"],"joinArgs":false,"shell":false,"port":8080} {"metadata":{"emulator":{"name":"firestore"},"message":"Starting Firestore Emulator with command {\"binary\":\"java\",\"args\":[\"-Dgoogle.cloud_firestore.debug_log_level=FINE\",\"-Duser.language=en\",\"-jar\",\"/home/mestrey/.cache/firebase/emulators/cloud-firestore-emulator-v1.22.0.jar\",\"--host\",\"127.0.0.1\",\"--port\",8080,\"--websocket_port\",9150,\"--database-edition\",\"standard\",\"--project_id\",\"controle-de-ferias-45d25\",\"--rules\",\"/home/mestrey/Documentos/GitHub/Managing-vacation-and-hybrid-work/firestore.rules\",\"--single_project_mode\",true],\"optionalArgs\":[\"port\",\"webchannel_port\",\"host\",\"rules\",\"websocket_port\",\"database-edition\",\"functions_emulator\",\"seed_from_export\",\"project_id\",\"single_project_mode\"],\"joinArgs\":false,\"shell\":false,\"port\":8080}"}}
+[info] i  firestore: Firestore Emulator logging to firestore-debug.log {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator logging to firestore-debug.log"}}
+[debug] [2026-08-11T17:06:13.978Z] Aug 11, 2026 2:06:13 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start
+INFO: Started WebSocket server on ws://127.0.0.1:9150
+ {"metadata":{"emulator":{"name":"firestore"},"message":"Aug 11, 2026 2:06:13 PM com.google.cloud.datastore.emulator.firestore.websocket.WebSocketServer start\nINFO: Started WebSocket server on ws://127.0.0.1:9150\n"}}
+[debug] [2026-08-11T17:06:14.014Z] 
+API endpoint: http://127.0.0.1:8080
+Database Edition: STANDARD
+Database Mode: CLOUD_FIRESTORE
+
+If you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:
+
+   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080
+
+If you are running a Firestore in Datastore Mode project, run:
+
+   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080
+
+Note: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.
+Dev App Server is now running.
+
+ {"metadata":{"emulator":{"name":"firestore"},"message":"\nAPI endpoint: http://127.0.0.1:8080\nDatabase Edition: STANDARD\nDatabase Mode: CLOUD_FIRESTORE\n\nIf you are using a library that supports the FIRESTORE_EMULATOR_HOST environment variable, run:\n\n   export FIRESTORE_EMULATOR_HOST=127.0.0.1:8080\n\nIf you are running a Firestore in Datastore Mode project, run:\n\n   export DATASTORE_EMULATOR_HOST=127.0.0.1:8080\n\nNote: Support for Datastore Mode is in preview. If you encounter any bugs please file at https://github.com/firebase/firebase-tools/issues.\nDev App Server is now running.\n\n"}}
+[info] ✔  firestore: Firestore Emulator was started in standard edition. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator was started in standard edition."}}
+[info] ✔  firestore: Firestore Emulator UI websocket is running on 9150. {"metadata":{"emulator":{"name":"firestore"},"message":"Firestore Emulator UI websocket is running on 9150."}}
+[debug] [2026-08-11T17:06:14.220Z] Could not find VSCode notification endpoint: TypeError: fetch failed. If you are not running the Firebase SQL Connect VSCode extension, this is expected and not an issue.
+[info] i  Running script: node --check app.js 
+[debug] [2026-08-11T17:06:14.227Z] Running node --check app.js with environment {"SHELL":"/bin/bash","npm_command":"exec","SESSION_MANAGER":"local/mestre-yoda:@/tmp/.ICE-unix/932,unix/mestre-yoda:/tmp/.ICE-unix/932","npm_config_yes":"true","npm_config_userconfig":"/home/mestrey/.npmrc","COLORTERM":"","XDG_CONFIG_DIRS":"/home/mestrey/.config/kdedefaults:/etc/xdg","npm_config_cache":"/home/mestrey/.npm","XDG_SESSION_PATH":"/org/freedesktop/DisplayManager/Session0","XDG_MENU_PREFIX":"plasma-","ICEAUTHORITY":"/run/user/1000/iceauth_TowMqq","NODE":"/usr/bin/node","VSSCRIPT_PATH":"/usr/lib/python3.14/site-packages/vapoursynth/libvsscript.so","LC_ADDRESS":"pt_BR.UTF-8","LC_NAME":"pt_BR.UTF-8","GRADLE_HOME":"/usr/share/java/gradle","MEMORY_PRESSURE_WRITE":"c29tZSAyMDAwMDAgMjAwMDAwMAA=","ELECTRON_RUN_AS_NODE":"1","COLOR":"0","npm_config_local_prefix":"/home/mestrey/Documentos/GitHub/Managing-vacation-and-hybrid-work","DESKTOP_SESSION":"plasma","LC_MONETARY":"pt_BR.UTF-8","GTK_RC_FILES":"/etc/gtk/gtkrc:/home/mestrey/.gtkrc:/home/mestrey/.config/gtkrc","NO_AT_BRIDGE":"1","npm_config_globalconfig":"/etc/npmrc","EDITOR":"vi","GH_PAGER":"cat","XDG_SEAT":"seat0","PWD":"/home/mestrey/Documentos/GitHub/Managing-vacation-and-hybrid-work","LOGNAME":"mestre","XDG_SESSION_DESKTOP":"KDE","XDG_SESSION_TYPE":"wayland","VSCODE_ESM_ENTRYPOINT":"vs/workbench/api/node/extensionHostProcess","npm_config_init_module":"/home/mestrey/.npm-init.js","SYSTEMD_EXEC_PID":"941","VSCODE_CODE_CACHE_PATH":"/home/mestrey/.config/Code/CachedData/e4c7e7b1d6d060162f4aa7f8225271b67ce1df75","_":"/home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/.bin/firebase","XAUTHORITY":"/run/user/1000/xauth_RxECNn","MOTD_SHOWN":"pam","GTK2_RC_FILES":"/etc/gtk-2.0/gtkrc:/home/mestrey/.gtkrc-2.0:/home/mestrey/.config/gtkrc-2.0","HOME":"/home/mestrey","LANG":"C.UTF-8","LC_PAPER":"pt_BR.UTF-8","RUSTICL_ENABLE":"iris","_JAVA_AWT_WM_NONREPARENTING":"1","XDG_CURRENT_DESKTOP":"KDE","MEMORY_PRESSURE_WATCH":"/sys/fs/cgroup/user.slice/user-1000.slice/user@1000.service/session.slice/plasma-plasmashell.service/memory.pressure","VSCODE_IPC_HOOK":"/run/user/1000/vscode-11680e29-1.13-main.sock","WAYLAND_DISPLAY":"wayland-0","VSCODE_CLI":"1","XDG_SEAT_PATH":"/org/freedesktop/DisplayManager/Seat0","INVOCATION_ID":"7744cf4a6a094cafae7eb1d36759d81a","MANAGERPID":"755","INIT_CWD":"/home/mestrey/Documentos/GitHub/Managing-vacation-and-hybrid-work","CHROME_DESKTOP":"code.desktop","KDE_SESSION_UID":"1000","npm_lifecycle_script":"'firebase'","XKB_DEFAULT_LAYOUT":"br","npm_config_npm_version":"12.0.2","CODEX_PERMISSION_PROFILE":":danger-full-access","XDG_SESSION_CLASS":"user","LC_IDENTIFICATION":"pt_BR.UTF-8","TERM":"dumb","CODEX_THREAD_ID":"019ff1c4-d9b4-76d2-bc99-f9209a1667e1","npm_config_prefix":"/usr","USER":"mestre","GIT_PAGER":"cat","QT_WAYLAND_RECONNECT":"1","KDE_SESSION_VERSION":"6","DISPLAY":":0","npm_lifecycle_event":"npx","VSCODE_PID":"3318","SHLVL":"1","PAGER":"cat","LC_TELEPHONE":"pt_BR.UTF-8","LC_MEASUREMENT":"pt_BR.UTF-8","VSCODE_CWD":"/home/mestrey","XDG_VTNR":"1","XDG_SESSION_ID":"1","MANAGERPIDFDID":"756","npm_config_user_agent":"npm/12.0.2 node/v26.4.0 linux x64 workspaces/false","NO_COLOR":"1","npm_execpath":"/usr/lib/node_modules/npm/bin/npm-cli.js","FC_FONTATIONS":"1","CODEX_CI":"1","LC_CTYPE":"C.UTF-8","VSCODE_CRASH_REPORTER_PROCESS_TYPE":"extensionHost","XDG_RUNTIME_DIR":"/run/user/1000","DEBUGINFOD_URLS":"https://debuginfod.archlinux.org https://debuginfod.cachyos.org ","npm_package_json":"/home/mestrey/Documentos/GitHub/Managing-vacation-and-hybrid-work/package.json","LC_TIME":"pt_BR.UTF-8","CODEX_INTERNAL_ORIGINATOR_OVERRIDE":"codex_vscode","LC_ALL":"C.UTF-8","ELECTRON_NO_ATTACH_CONSOLE":"1","JOURNAL_STREAM":"9:23591","XDG_DATA_DIRS":"/home/mestrey/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share","GDK_BACKEND":"wayland","KDE_FULL_SESSION":"true","npm_config_allow_scripts":"","npm_config_noproxy":"","PATH":"/home/mestrey/.npm/_npx/ba4f1959e38407b5/node_modules/.bin:/home/mestrey/Documentos/GitHub/Managing-vacation-and-hybrid-work/node_modules/.bin:/home/mestrey/Documentos/GitHub/node_modules/.bin:/home/mestrey/Documentos/node_modules/.bin:/home/mestrey/node_modules/.bin:/home/node_modules/.bin:/node_modules/.bin:/usr/lib/node_modules/npm/node_modules/@npmcli/run-script/lib/node-gyp-bin:/home/mestrey/.codex/tmp/arg0/codex-arg0Isak63:/usr/local/sbin:/usr/local/bin:/usr/bin:/var/lib/flatpak/exports/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl:/home/mestrey/.vscode/extensions/openai.chatgpt-26.5803.61601-linux-x64/bin/linux-x86_64","npm_config_node_gyp":"/usr/lib/node_modules/node-gyp/bin/node-gyp.js","DBUS_SESSION_BUS_ADDRESS":"unix:path=/run/user/1000/bus","npm_config_global_prefix":"/usr","RUST_LOG":"warn","VSCODE_NLS_CONFIG":"{\"userLocale\":\"pt-br\",\"osLocale\":\"pt-br\",\"resolvedLanguage\":\"pt-br\",\"defaultMessagesFile\":\"/usr/share/code/resources/app/out/nls.messages.json\",\"languagePack\":{\"translationsConfigFile\":\"/home/mestrey/.config/Code/clp/f71151e941f71f3f6eaf9dfe88270459.pt-br/tcf.json\",\"messagesFile\":\"/home/mestrey/.config/Code/clp/f71151e941f71f3f6eaf9dfe88270459.pt-br/e4c7e7b1d6d060162f4aa7f8225271b67ce1df75/nls.messages.json\",\"corruptMarkerFile\":\"/home/mestrey/.config/Code/clp/f71151e941f71f3f6eaf9dfe88270459.pt-br/corrupted.info\"},\"locale\":\"pt-br\",\"availableLanguages\":{\"*\":\"pt-br\"},\"_languagePackId\":\"f71151e941f71f3f6eaf9dfe88270459.pt-br\",\"_languagePackSupport\":true,\"_translationsConfigFile\":\"/home/mestrey/.config/Code/clp/f71151e941f71f3f6eaf9dfe88270459.pt-br/tcf.json\",\"_cacheRoot\":\"/home/mestrey/.config/Code/clp/f71151e941f71f3f6eaf9dfe88270459.pt-br\",\"_resolvedLanguagePackCoreLocation\":\"/home/mestrey/.config/Code/clp/f71151e941f71f3f6eaf9dfe88270459.pt-br/e4c7e7b1d6d060162f4aa7f8225271b67ce1df75\",\"_corruptedFile\":\"/home/mestrey/.config/Code/clp/f71151e941f71f3f6eaf9dfe88270459.pt-br/corrupted.info\"}","KDE_APPLICATIONS_AS_SCOPE":"1","MAIL":"/var/spool/mail/mestre","npm_config_global_ignore_file":"/usr/etc/npmignore","DEBUG":"release","npm_node_execpath":"/usr/bin/node","VSCODE_HANDLES_UNCAUGHT_ERRORS":"true","LC_NUMERIC":"pt_BR.UTF-8","IS_FIREBASE_CLI":"true","GCLOUD_PROJECT":"controle-de-ferias-45d25","FIREBASE_CONFIG":"{\"projectId\":\"controle-de-ferias-45d25\",\"storageBucket\":\"controle-de-ferias-45d25.appspot.com\",\"databaseURL\":\"https://controle-de-ferias-45d25.firebaseio.com\"}","FIREBASE_EMULATOR_HUB":"127.0.0.1:4400","FIRESTORE_EMULATOR_HOST":"127.0.0.1:8080","FIREBASE_FIRESTORE_EMULATOR_ADDRESS":"127.0.0.1:8080"}
+[info] ✔  Script exited successfully (code 0) 
+[info] i  emulators: Shutting down emulators. {"metadata":{"emulator":{"name":"hub"},"message":"Shutting down emulators."}}
+[info] i  firestore: Stopping Firestore Emulator {"metadata":{"emulator":{"name":"firestore"},"message":"Stopping Firestore Emulator"}}
+[debug] [2026-08-11T17:06:14.773Z] *** shutting down gRPC server since JVM is shutting down
+ {"metadata":{"emulator":{"name":"firestore"},"message":"*** shutting down gRPC server since JVM is shutting down\n"}}
+[debug] [2026-08-11T17:06:14.783Z] *** server shut down
+ {"metadata":{"emulator":{"name":"firestore"},"message":"*** server shut down\n"}}
+[info] i  hub: Stopping emulator hub {"metadata":{"emulator":{"name":"hub"},"message":"Stopping emulator hub"}}
+[info] i  logging: Stopping Logging Emulator {"metadata":{"emulator":{"name":"logging"},"message":"Stopping Logging Emulator"}}
+[debug] [2026-08-11T17:06:15.110Z] Could not find VSCode notification endpoint: TypeError: fetch failed. If you are not running the Firebase SQL Connect VSCode extension, this is expected and not an issue.

@@ -12,7 +12,31 @@ const firebaseConfig = {
 };
 
 firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
 const db = firebase.firestore();
+
+async function authenticateWithFirebase() {
+    if (!auth.currentUser) {
+        await auth.signInAnonymously();
+    }
+}
+
+function showFirebaseStatus(error) {
+    console.error("Falha de conexão com o Firebase:", error);
+
+    let status = document.getElementById('firebase-status');
+    if (!status) {
+        status = document.createElement('div');
+        status.id = 'firebase-status';
+        status.className = 'firebase-status';
+        document.querySelector('header').insertAdjacentElement('afterend', status);
+    }
+
+    const needsAnonymousAuth = error?.code === 'auth/operation-not-allowed';
+    status.textContent = needsAnonymousAuth
+        ? 'O acesso ao Firebase está temporariamente indisponível. Ative o provedor Anônimo em Authentication > Sign-in method.'
+        : 'Não foi possível sincronizar com o Firebase. O painel está exibindo os dados locais; alterações não serão salvas.';
+}
 
 // =================================================================
 // LISTA DE FERIADOS E AVATARES (DADOS INICIAIS)
@@ -179,6 +203,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // ⭐ MODIFICADO: Função agora é async para aguardar o carregamento das configurações
 async function initializeApp() {
+    try {
+        await authenticateWithFirebase();
+    } catch (error) {
+        showFirebaseStatus(error);
+    }
+
     await loadGlobalSettings();
     createYodaAdminPanels();
     populateUserDropdown();
@@ -474,10 +504,14 @@ async function loadUserVacations() {
     const vacationPeriodsDiv = document.getElementById('vacation-periods');
     vacationPeriodsDiv.innerHTML = '';
     if (!currentUserLogin) return;
-    const docRef = db.collection('funcionarios').doc(currentUserLogin);
-    const doc = await docRef.get();
-    if (doc.exists && doc.data().vacationPeriods) {
-        doc.data().vacationPeriods.forEach(period => addVacationPeriod(period));
+    try {
+        const docRef = db.collection('funcionarios').doc(currentUserLogin);
+        const doc = await docRef.get();
+        if (doc.exists && doc.data().vacationPeriods) {
+            doc.data().vacationPeriods.forEach(period => addVacationPeriod(period));
+        }
+    } catch (error) {
+        showFirebaseStatus(error);
     }
     updateTotalBusinessDays();
 }
@@ -565,10 +599,15 @@ async function refreshSubstitutionData() {
     const dayMap = { mon: 1, tue: 2, wed: 3, thu: 4, fri: 5 };
 
     // PASSO 1: Carrega todos os funcionários (como antes)
-    const querySnapshot = await db.collection('funcionarios').get();
-    querySnapshot.forEach(doc => {
-        allDbData[doc.id] = doc.data();
-    });
+    try {
+        const querySnapshot = await db.collection('funcionarios').get();
+        querySnapshot.forEach(doc => {
+            allDbData[doc.id] = doc.data();
+        });
+    } catch (error) {
+        showFirebaseStatus(error);
+        allDbData = { ...globalUsersData };
+    }
 
     // PASSO 2: Processa as FÉRIAS para gerar substituições (como antes)
     Object.keys(allDbData).forEach(userLogin => {
@@ -1396,12 +1435,18 @@ async function loadGlobalSettings() {
 
     // --- Lógica de Sincronização de Funcionários (VERSÃO FINAL) ---
 
-    // 2. Carrega todos os usuários que existem no Firestore
-    const usersSnapshot = await db.collection('funcionarios').get();
     const loadedUsersFromFirestore = {};
-    usersSnapshot.forEach(doc => {
-        loadedUsersFromFirestore[doc.id] = doc.data();
-    });
+    try {
+        // 2. Carrega todos os usuários que existem no Firestore
+        const usersSnapshot = await db.collection('funcionarios').get();
+        usersSnapshot.forEach(doc => {
+            loadedUsersFromFirestore[doc.id] = doc.data();
+        });
+    } catch (error) {
+        showFirebaseStatus(error);
+        globalUsersData = { ...initialUsersData };
+        return;
+    }
 
     // 3. Cria o objeto de dados final, que será usado na aplicação
     const finalUsersData = {};
@@ -1434,7 +1479,11 @@ async function loadGlobalSettings() {
     // 5. Se houver usuários novos para adicionar, envia para o banco de uma vez
     if (dbNeedsUpdate) {
         console.log("Sincronizando novos usuários com o banco de dados...");
-        await batch.commit();
+        try {
+            await batch.commit();
+        } catch (error) {
+            showFirebaseStatus(error);
+        }
     }
 
     // 6. Define a variável global com os dados finalmente corretos e completos
