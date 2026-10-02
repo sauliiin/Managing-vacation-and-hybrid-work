@@ -59,6 +59,7 @@ const initialAvatars = [
 // ⭐ NOVO: Variáveis globais para armazenar as configurações dinâmicas
 let globalHolidays = [];
 let globalAvatars = [];
+let globalRemovedUsers = []; // Logins removidos pelo Yoda que não devem ser recriados a partir de initialUsersData
 
 const YODA_LOGIN = 'pr1182589';
 
@@ -1422,10 +1423,12 @@ async function loadGlobalSettings() {
             const data = doc.data();
             globalHolidays = data.holidays || initialHolidays;
             globalAvatars = data.availableAvatars || initialAvatars;
+            globalRemovedUsers = data.removedUsers || [];
         } else {
             await configRef.set({ holidays: initialHolidays, availableAvatars: initialAvatars });
             globalHolidays = initialHolidays;
             globalAvatars = initialAvatars;
+            globalRemovedUsers = [];
         }
     } catch (error) {
         console.error("Erro ao carregar configurações globais:", error);
@@ -1455,6 +1458,8 @@ async function loadGlobalSettings() {
 
     // 4. Itera sobre a lista de usuários INICIAL (a fonte da verdade sobre quem deve existir)
     Object.keys(initialUsersData).forEach(login => {
+        if (globalRemovedUsers.includes(login)) return; // Removido pelo Yoda: não recria
+
         const initialUser = initialUsersData[login];
         const firestoreUser = loadedUsersFromFirestore[login];
 
@@ -1473,6 +1478,13 @@ async function loadGlobalSettings() {
             const userRef = db.collection('funcionarios').doc(login);
             batch.set(userRef, initialUser);
             dbNeedsUpdate = true;
+        }
+    });
+
+    // 4b. Inclui os usuários que existem apenas no Firestore (ex: adicionados pelo painel do Yoda)
+    Object.keys(loadedUsersFromFirestore).forEach(login => {
+        if (!finalUsersData[login]) {
+            finalUsersData[login] = loadedUsersFromFirestore[login];
         }
     });
 
@@ -1895,6 +1907,10 @@ async function handleAddUser() {
 
     try {
         await db.collection('funcionarios').doc(login).set(newUser);
+        // Se o login tinha sido removido antes, tira da lista de removidos
+        await db.collection('configuracoes').doc('geral').set({
+            removedUsers: firebase.firestore.FieldValue.arrayRemove(login)
+        }, { merge: true });
         alert(`Funcionário ${name} adicionado com sucesso!`);
 
         document.getElementById('new-user-login').value = '';
@@ -1915,6 +1931,10 @@ async function handleRemoveUser(login, name) {
 
     try {
         await db.collection('funcionarios').doc(login).delete();
+        // Registra a remoção para que a sincronização não recrie o usuário a partir de initialUsersData
+        await db.collection('configuracoes').doc('geral').set({
+            removedUsers: firebase.firestore.FieldValue.arrayUnion(login)
+        }, { merge: true });
         alert("Funcionário removido com sucesso!");
 
         await loadGlobalSettings();
